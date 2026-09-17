@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Activity, Subject, Course, StudentAdmission } from '../types';
 import { INITIAL_SUBJECTS, INITIAL_STUDENTS, INITIAL_COURSES } from '../data/initialAcademicData';
+import { GlobalStudentSearch } from "./GlobalStudentSearch";
 import { TeacherActivitiesManager } from './TeacherActivitiesManager';
 
 interface TeacherPortalProps {
@@ -90,38 +91,24 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
 
 
   return (
-    <div id="teacher-portal-container" className="min-h-screen w-full bg-slate-100 flex flex-col text-slate-800">
+    <div id="teacher-portal-container" className="min-h-screen w-full bg-slate-100 flex flex-col text-blue-900">
       {/* Top Navigation */}
       <header
         id="teacher-topbar"
         className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-700 to-teal-500 text-white flex items-center justify-center font-bold shadow-xs">
-            <School className="w-5 h-5" aria-hidden="true" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900 text-base leading-none">
-                Portal Docente
-              </span>
-              <span
-                id="teacher-role-tag"
-                className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded bg-blue-100 text-blue-800 border border-blue-300"
-              >
-                PROFESOR
-              </span>
-            </div>
-            <span className="text-xs text-slate-500">Periodo Académico 2026-I</span>
-          </div>
+          <img src="/logofun01.png" alt="Fundación ULEP" className="h-9 w-auto object-contain" />
         </div>
 
         <div className="flex items-center gap-3">
+          <GlobalStudentSearch students={students} />
+          <div className="h-7 w-px bg-slate-200 hidden sm:block" />
           <div className="hidden sm:flex flex-col text-right">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Docente activo
             </span>
-            <span className="text-sm font-semibold text-slate-800 font-mono">
+            <span className="text-sm font-semibold text-blue-900 font-mono">
               {username.toUpperCase()}
             </span>
           </div>
@@ -151,7 +138,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
             className={`pb-3 px-4 text-sm font-medium transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
               activeTab === 'classes'
                 ? 'border-blue-700 text-blue-700 font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                : 'border-transparent text-slate-500 hover:text-blue-900'
             }`}
           >
             <FolderKanban className="w-4 h-4" />
@@ -167,7 +154,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
             className={`pb-3 px-4 text-sm font-medium transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
               activeTab === 'students'
                 ? 'border-blue-700 text-blue-700 font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                : 'border-transparent text-slate-500 hover:text-blue-900'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -181,7 +168,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
             className={`pb-3 px-4 text-sm font-medium transition-colors cursor-pointer border-b-2 flex items-center gap-2 ${
               activeTab === 'grading'
                 ? 'border-blue-700 text-blue-700 font-semibold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                : 'border-transparent text-slate-500 hover:text-blue-900'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -216,7 +203,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                     {selectedCourse.name}
                   </button>
                   <span>/</span>
-                  <span className="font-semibold text-slate-900">{activeSubject.name}</span>
+                  <span className="font-semibold text-blue-950">{activeSubject.name}</span>
                   <span>/</span>
                   <span className="text-slate-400">Gestión de Actividades</span>
                 </div>
@@ -232,7 +219,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                   </button>
 
                   <span className="text-xs text-slate-500 font-medium">
-                    Materia: <strong className="text-slate-800">{activeSubject.name}</strong>
+                    Materia: <strong className="text-blue-900">{activeSubject.name}</strong>
                   </span>
                 </div>
 
@@ -263,7 +250,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                   </button>
 
                   <div className="text-xs text-slate-500 font-medium">
-                    Curso seleccionado: <strong className="text-slate-900">{selectedCourse.name}</strong>
+                    Curso seleccionado: <strong className="text-blue-950">{selectedCourse.name}</strong>
                   </div>
                 </div>
 
@@ -276,7 +263,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                       </span>
                       <span className="text-xs text-slate-500 font-medium">Carga Docente</span>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                    <h2 className="text-xl font-bold text-blue-950 tracking-tight">
                       {selectedCourse.name}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">
@@ -287,7 +274,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                   <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 self-start md:self-auto">
                     <div className="text-center px-3 border-r border-slate-200">
                       <div className="text-xs text-slate-500 font-medium">Materias</div>
-                      <div className="text-lg font-bold text-slate-900">{courseSubjects.length}</div>
+                      <div className="text-lg font-bold text-blue-950">{courseSubjects.length}</div>
                     </div>
                     <div className="text-center px-3">
                       <div className="text-xs text-slate-500 font-medium">Actividades</div>
@@ -346,7 +333,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                                   {sub.credits} Créditos Académicos
                                 </span>
                               </div>
-                              <h3 className="font-semibold text-slate-900 text-base mb-1">{sub.name}</h3>
+                              <h3 className="font-semibold text-blue-950 text-base mb-1">{sub.name}</h3>
                               <p className="text-xs text-slate-500 mt-1">Docente: {sub.professor}</p>
 
                               <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 text-xs border border-slate-100">
@@ -385,7 +372,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
               <div id="teacher-courses-panel" className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-blue-950 tracking-tight flex items-center gap-2">
                       <GraduationCap className="w-5 h-5 text-blue-700" />
                       <span>Panel de Cursos Asignados</span>
                     </h2>
@@ -439,7 +426,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                             </span>
                           </div>
 
-                          <h3 className="font-bold text-slate-900 text-base group-hover:text-blue-700 transition-colors leading-snug">
+                          <h3 className="font-bold text-blue-950 text-base group-hover:text-blue-700 transition-colors leading-snug">
                             {course.name}
                           </h3>
 
@@ -449,7 +436,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                                 <BookOpen className="w-3.5 h-3.5 text-blue-700" />
                                 <span>Materias asignadas:</span>
                               </span>
-                              <strong className="font-bold text-slate-800">{cSubjects.length}</strong>
+                              <strong className="font-bold text-blue-900">{cSubjects.length}</strong>
                             </div>
 
                             <div className="flex items-center justify-between text-xs text-slate-600">
@@ -500,7 +487,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
         {activeTab === 'students' && (
           <div id="teacher-students-card" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <h2 className="text-base font-semibold text-slate-900">Directorio de Estudiantes Matriculados</h2>
+              <h2 className="text-base font-semibold text-blue-950">Directorio de Estudiantes Matriculados</h2>
               <div className="relative w-full sm:w-64">
                 <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                 <input
@@ -528,7 +515,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                   {filteredStudents.map((st) => (
                     <tr key={st.id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3 px-3 font-mono font-medium text-slate-700">{st.cedula}</td>
-                      <td className="py-3 px-3 font-semibold text-slate-900">{st.fullName}</td>
+                      <td className="py-3 px-3 font-semibold text-blue-950">{st.fullName}</td>
                       <td className="py-3 px-3 text-slate-600">{st.email}</td>
                       <td className="py-3 px-3 text-slate-600">{st.courseName}</td>
                       <td className="py-3 px-3 text-center">
@@ -549,7 +536,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
           <div id="teacher-grading-card" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">Planilla de Calificaciones</h2>
+                <h2 className="text-base font-semibold text-blue-950">Planilla de Calificaciones</h2>
                 <p className="text-xs text-slate-500">Materia: {activeSubject?.name || 'Seleccione una materia'}</p>
               </div>
 
@@ -583,7 +570,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                   {gradingStudents.map((st, idx) => (
                     <tr key={st.id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3 px-3 font-mono font-medium text-slate-700">{st.cedula}</td>
-                      <td className="py-3 px-3 font-semibold text-slate-900">{st.fullName}</td>
+                      <td className="py-3 px-3 font-semibold text-blue-950">{st.fullName}</td>
                       <td className="py-3 px-3 text-center">
                         <input
                           type="number"

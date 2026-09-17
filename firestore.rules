@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------------------
+    // GLOBAL CATCH-ALL (DEFAULT DENY)
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // REUSABLE HELPER FUNCTIONS
+    // -------------------------------------------------------------------------
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.email == 'grupoulep@gmail.com'; } // Bootstrapped admin
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // -------------------------------------------------------------------------
+    // VALIDATION HELPERS (Anti-Update-Gap)
+    // -------------------------------------------------------------------------
+    function isValidCourse(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.code is string && data.code.size() > 0 && data.code.size() <= 50;
+    }
+
+    function isValidSubject(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.code is string && data.code.size() > 0 && data.code.size() <= 50 &&
+             data.credits is number && data.credits >= 0 && data.credits <= 20 &&
+             data.courseId is string && data.courseId.size() > 0 && data.courseId.size() <= 128 &&
+             data.courseName is string && data.courseName.size() > 0 && data.courseName.size() <= 100 &&
+             data.professor is string && data.professor.size() <= 100 &&
+             data.weeklyHours is number && data.weeklyHours >= 0 && data.weeklyHours <= 40;
+    }
+
+    function isValidActivity(data) {
+      return data.subjectId is string && data.subjectId.size() > 0 && data.subjectId.size() <= 128 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.dueDate is string && data.dueDate.size() <= 50 &&
+             data.order is number &&
+             data.weight is number && data.weight >= 0 && data.weight <= 100 &&
+             data.type is string && data.type.size() <= 50;
+    }
+
+    function isValidStudentAdmission(data) {
+      return data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 200 &&
+             data.cedula is string && data.cedula.size() > 0 && data.cedula.size() <= 50 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 200 &&
+             data.courseId is string && data.courseId.size() > 0 && data.courseId.size() <= 128 &&
+             data.courseName is string && data.courseName.size() > 0 && data.courseName.size() <= 100 &&
+             data.admissionDate is string && data.admissionDate.size() <= 50 &&
+             data.status is string && data.status.size() <= 50 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+             (!('registrationType' in data) || (data.registrationType is string && data.registrationType.size() <= 50));
+    }
+
+    function isValidBanner(data) {
+      return data.imageUrl is string && data.imageUrl.size() > 0 && data.imageUrl.size() <= 1000 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.active is bool;
+    }
+
+    function isValidCentralAnnouncement(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 5000 &&
+             data.active is bool &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 1000));
+    }
+
+
+    // -------------------------------------------------------------------------
+    // COLLECTIONS
+    // -------------------------------------------------------------------------
+
+    match /courses/{courseId} {
+      allow read: if isSignedIn(); // All authenticated users can read courses
+      allow create: if isAdmin() && isValidId(courseId) && isValidCourse(incoming()) && incoming().keys().hasAll(['name', 'code']) && incoming().keys().size() == 2;
+      allow update: if isAdmin() && isValidId(courseId) && isValidCourse(incoming()); // Admins can update all fields
+      allow delete: if isAdmin() && isValidId(courseId);
+    }
+
+    match /subjects/{subjectId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(subjectId) && isValidSubject(incoming()) && incoming().keys().hasAll(['name', 'code', 'credits', 'courseId', 'courseName', 'professor', 'weeklyHours']) && incoming().keys().size() == 7 && exists(/databases/$(database)/documents/courses/$(incoming().courseId));
+      allow update: if isAdmin() && isValidId(subjectId) && isValidSubject(incoming());
+      allow delete: if isAdmin() && isValidId(subjectId);
+    }
+
+    match /activities/{activityId} {
+      allow read: if isSignedIn();
+      allow create: if (isAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/subjects/$(incoming().subjectId)))) && isValidId(activityId) && isValidActivity(incoming()); // Teachers/Admins can create
+      allow update: if (isAdmin() || isSignedIn()) && isValidId(activityId) && isValidActivity(incoming()); // Simplified for now, should restrict based on role
+      allow delete: if isAdmin() && isValidId(activityId);
+    }
+
+    match /students/{studentId} {
+      allow read: if isAdmin(); // Only admins can read all students (PII protection)
+      allow create: if isAdmin() && isValidId(studentId) && isValidStudentAdmission(incoming()) && exists(/databases/$(database)/documents/courses/$(incoming().courseId));
+      allow update: if isAdmin() && isValidId(studentId) && isValidStudentAdmission(incoming());
+      allow delete: if isAdmin() && isValidId(studentId);
+    }
+
+    match /banners/{bannerId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(bannerId) && isValidBanner(incoming()) && incoming().keys().hasAll(['imageUrl', 'title', 'active']) && incoming().keys().size() == 3;
+      allow update: if isAdmin() && isValidId(bannerId) && isValidBanner(incoming());
+      allow delete: if isAdmin() && isValidId(bannerId);
+    }
+
+    match /mainAds/{adId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidId(adId) && isValidBanner(incoming()) && incoming().keys().hasAll(['imageUrl', 'title', 'active']) && incoming().keys().size() == 3;
+      allow update: if isAdmin() && isValidId(adId) && isValidBanner(incoming());
+      allow delete: if isAdmin() && isValidId(adId);
+    }
+
+    match /centralAnnouncement/singleton {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidCentralAnnouncement(incoming());
+      allow update: if isAdmin() && isValidCentralAnnouncement(incoming());
+      allow delete: if isAdmin();
+    }
+  }
+}

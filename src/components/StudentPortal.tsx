@@ -144,69 +144,27 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   
 
   return (
-    <div id="student-portal-container" className="min-h-screen w-full bg-slate-100 flex flex-col text-slate-800">
+    <div id="student-portal-container" className="min-h-screen w-full bg-slate-100 flex flex-col text-blue-900">
       {/* Main Ads Modal */}
       {showMainAds && activeMainAds.length > 0 && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md"></div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 sm:p-[50px]">
+          <div className="absolute inset-0 bg-transparent backdrop-blur-md"></div>
           
-          <div className="relative w-full max-w-[360px] h-[640px] max-h-[90vh] bg-black rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300 ring-4 ring-white/10">
+          <div className="relative w-full h-full rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
             
-            {/* Fake X button that does not close */}
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                alert("Por favor visualiza la publicidad para continuar.");
-              }}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-md transition-colors cursor-pointer"
+              onClick={() => setShowMainAds(false)}
+              className="absolute top-4 right-4 z-10 p-3 bg-black/30 hover:bg-black/50 text-white rounded-full backdrop-blur-sm transition-colors cursor-pointer"
               title="Cerrar"
             >
-              <XIcon className="w-5 h-5" />
+              <XIcon className="w-6 h-6" />
             </button>
 
-            {/* Ad Image */}
-            <div className="flex-1 relative w-full h-full">
-               <img 
-                 src={activeMainAds[currentAdIndex].imageUrl} 
-                 alt={activeMainAds[currentAdIndex].title || 'Publicidad'} 
-                 className="absolute inset-0 w-full h-full object-cover" 
-               />
-               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-            </div>
-
-            {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-4">
-              <div className="flex items-center justify-center gap-1.5 mb-2">
-                {activeMainAds.map((_, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`h-1.5 rounded-full transition-all ${idx === currentAdIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/40'}`} 
-                  />
-                ))}
-              </div>
-              
-              <div className="text-center">
-                <h3 className="text-white font-bold text-lg mb-2 drop-shadow-md">
-                  {activeMainAds[currentAdIndex].title || 'Publicidad'}
-                </h3>
-              </div>
-
-              {currentAdIndex < activeMainAds.length - 1 ? (
-                <button
-                  onClick={() => setCurrentAdIndex(prev => prev + 1)}
-                  className="w-full py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
-                >
-                  Siguiente
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowMainAds(false)}
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95 cursor-pointer"
-                >
-                  Comenzar
-                </button>
-              )}
-            </div>
+            <img 
+              src={activeMainAds[currentAdIndex].imageUrl} 
+              alt={activeMainAds[currentAdIndex].title || 'Publicidad'} 
+              className="w-full h-full object-cover" 
+            />
           </div>
         </div>
       )}
@@ -217,14 +175,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-700 to-teal-500 text-white flex items-center justify-center font-bold shadow-md">
-            <GraduationCap className="w-5 h-5" aria-hidden="true" />
-          </div>
-          <div>
-            <h1 className="font-bold text-slate-900 text-lg leading-none tracking-tight">
-              Portal del Estudiante
-            </h1>
-          </div>
+          <img src="/logofun01.png" alt="Fundación ULEP" className="h-9 w-auto object-contain" />
         </div>
 
         <div className="flex items-center gap-3">
@@ -255,7 +206,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             className={`py-2 px-4 text-sm font-semibold transition-all cursor-pointer rounded-xl flex items-center gap-2 ${
               activeTab === 'subjects'
                 ? 'bg-blue-50 text-blue-700'
-                : 'bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                : 'bg-transparent text-slate-500 hover:text-blue-900 hover:bg-slate-50'
             }`}
           >
             <FolderKanban className="w-4 h-4" />
@@ -272,7 +223,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             className={`py-2 px-4 text-sm font-semibold transition-all cursor-pointer rounded-xl flex items-center gap-2 ${
               activeTab === 'grades'
                 ? 'bg-blue-50 text-blue-700'
-                : 'bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                : 'bg-transparent text-slate-500 hover:text-blue-900 hover:bg-slate-50'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -309,7 +260,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                     {selectedCourse?.name || 'Curso'}
                   </button>
                   <span>/</span>
-                  <span className="font-semibold text-slate-900">{selectedSubject.name}</span>
+                  <span className="font-semibold text-blue-950">{selectedSubject.name}</span>
                   <span>/</span>
                   <span className="text-slate-400">Actividades Evaluativas</span>
                 </div>
@@ -338,7 +289,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                   </button>
 
                   <div className="text-xs text-slate-500 font-medium">
-                    Curso seleccionado: <strong className="text-slate-900">{selectedCourse.name}</strong>
+                    Curso seleccionado: <strong className="text-blue-950">{selectedCourse.name}</strong>
                   </div>
                 </div>
 
@@ -353,7 +304,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                         Programa Académico
                       </span>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                    <h2 className="text-xl font-bold text-blue-950 tracking-tight">
                       {selectedCourse.name}
                     </h2>
                     <p className="text-xs text-slate-500 mt-1">
@@ -364,7 +315,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                   <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 self-start md:self-auto">
                     <div className="text-center px-3 border-r border-slate-200">
                       <div className="text-xs text-slate-500 font-medium">Materias</div>
-                      <div className="text-lg font-bold text-slate-900">{courseSubjects.length}</div>
+                      <div className="text-lg font-bold text-blue-950">{courseSubjects.length}</div>
                     </div>
                     <div className="text-center px-3">
                       <div className="text-xs text-slate-500 font-medium">Actividades</div>
@@ -418,7 +369,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                                 </span>
                               </div>
 
-                              <h3 className="font-bold text-slate-900 text-lg group-hover:text-blue-700 transition-colors">
+                              <h3 className="font-bold text-blue-950 text-lg group-hover:text-blue-700 transition-colors">
                                 {sub.name}
                               </h3>
 
@@ -432,7 +383,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                                   <Layers className="w-4 h-4 text-slate-400" />
                                   <span><strong className="text-slate-700">{subActivities.length}</strong> actividades</span>
                                   <span className="text-slate-300">|</span>
-                                  <span className="font-semibold text-emerald-600">{completed} entregadas</span>
+                                  <span className="font-semibold text-sky-600">{completed} entregadas</span>
                                 </span>
                               </div>
                             </div>
@@ -444,7 +395,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                                   e.stopPropagation();
                                   setSelectedSubjectId(sub.id);
                                 }}
-                                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-br from-blue-700 to-teal-500 hover:bg-blue-700 text-white text-sm font-bold transition-all cursor-pointer shadow-sm hover:shadow-md"
+                                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-br from-blue-900 to-sky-400 hover:bg-blue-700 text-white text-sm font-bold transition-all cursor-pointer shadow-sm hover:shadow-md"
                               >
                                 <span>Entrar al aula</span>
                                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -491,7 +442,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                             </span>
                           </div>
 
-                          <h3 className="font-bold text-slate-900 text-xl group-hover:text-blue-700 transition-colors leading-snug mb-1">
+                          <h3 className="font-bold text-blue-950 text-xl group-hover:text-blue-700 transition-colors leading-snug mb-1">
                             {course.name}
                           </h3>
 
@@ -501,7 +452,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                                 <BookOpen className="w-4 h-4 text-blue-500" />
                                 <span className="font-medium">Materias asignadas:</span>
                               </span>
-                              <strong className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">{cSubjects.length}</strong>
+                              <strong className="font-bold text-blue-900 bg-slate-100 px-2 py-0.5 rounded-md">{cSubjects.length}</strong>
                             </div>
 
                             <div className="flex items-center justify-between text-sm text-slate-600">
@@ -535,7 +486,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         {activeTab === 'grades' && (
           <div id="student-grades-table-card" className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-blue-950 flex items-center gap-2">
                 <Award className="w-5 h-5 text-blue-700" />
                 Historial de Calificaciones
               </h2>
@@ -569,12 +520,12 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                         <tr key={g.id} className="hover:bg-slate-50 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex flex-col">
-                              <span className="font-semibold text-slate-900">{subject?.name || 'Materia desconocida'}</span>
+                              <span className="font-semibold text-blue-950">{subject?.name || 'Materia desconocida'}</span>
                               <span className="text-xs font-mono text-slate-500">{subject?.code}</span>
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="font-medium text-slate-800 line-clamp-2" title={g.title}>{g.title}</span>
+                            <span className="font-medium text-blue-900 line-clamp-2" title={g.title}>{g.title}</span>
                           </td>
                           <td className="py-3 px-4">
                             <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
@@ -588,7 +539,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                             {g.weight}%
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <span className="inline-flex items-center justify-center min-w-[3rem] px-2.5 py-1 rounded-lg font-bold text-sm bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center justify-center min-w-[3rem] px-2.5 py-1 rounded-lg font-bold text-sm bg-sky-50 text-sky-700 border border-emerald-200">
                               {finalGrade?.toFixed(1) || 'N/A'}
                             </span>
                           </td>

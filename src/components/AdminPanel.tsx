@@ -11,21 +11,24 @@ import {
   FolderKanban,
   Image as ImageIcon
 } from 'lucide-react';
-import { Course, Subject, StudentAdmission, AdminSection, Activity, Banner, CentralAnnouncement } from '../types';
-import { Megaphone, Airplay } from 'lucide-react';
+import { Teacher, Course, Subject, StudentAdmission, AdminSection, Activity, Banner, CentralAnnouncement, PasswordRecoveryRequest, SideAd } from '../types';
+import { Megaphone, Airplay, KeyRound, PanelLeft } from 'lucide-react';
 import {
   INITIAL_COURSES,
   INITIAL_SUBJECTS,
   INITIAL_STUDENTS,
   INITIAL_ACTIVITIES
 } from '../data/initialAcademicData';
+import { GlobalStudentSearch } from "./GlobalStudentSearch";
 import { DashboardOverview } from './DashboardOverview';
 import { CoursesSection } from './CoursesSection';
 import { SubjectsSection } from './SubjectsSection';
-import { StudentsSection } from './StudentsSection';
+import { UserRegistrationSection } from './UserRegistrationSection';
 import { BannersSection } from './BannersSection';
 import { CentralAnnouncementSection } from './CentralAnnouncementSection';
 import { MainAdsSection } from './MainAdsSection';
+import { PasswordRecoverySection } from './PasswordRecoverySection';
+import { SideAdSection } from './SideAdSection';
 
 export type { AdminSection };
 
@@ -35,10 +38,15 @@ interface AdminPanelProps {
   subjects?: Subject[];
   activities?: Activity[];
   students?: StudentAdmission[];
+  teachers?: Teacher[];
   banners?: Banner[];
+  recoveryRequests?: PasswordRecoveryRequest[];
+  onApproveRecovery?: (id: string) => void;
   onBannersChange?: (banners: Banner[]) => void;
   mainAds?: Banner[];
   onMainAdsChange?: (ads: Banner[]) => void;
+  sideAd?: SideAd;
+  onSideAdChange?: (sideAd: SideAd) => void;
   centralAnnouncement?: CentralAnnouncement;
   onCentralAnnouncementChange?: (announcement: CentralAnnouncement) => void;
   onAddCourse?: (newCourse: Omit<Course, 'id'>) => void;
@@ -53,6 +61,9 @@ interface AdminPanelProps {
   onAddStudent?: (newStudent: Omit<StudentAdmission, 'id'>) => void;
   onUpdateStudent?: (student: StudentAdmission) => void;
   onDeleteStudent?: (id: string) => void;
+  onAddTeacher?: (newTeacher: Omit<Teacher, 'id'>) => void;
+  onUpdateTeacher?: (teacher: Teacher) => void;
+  onDeleteTeacher?: (id: string) => void;
   onLogout: () => void;
 }
 
@@ -62,10 +73,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   subjects: externalSubjects,
   activities: externalActivities,
   students: externalStudents,
+  teachers: externalTeachers,
+  recoveryRequests,
+  onApproveRecovery,
   banners,
   onBannersChange,
   mainAds,
   onMainAdsChange,
+  sideAd,
+  onSideAdChange,
   centralAnnouncement,
   onCentralAnnouncementChange,
   onAddCourse: externalOnAddCourse,
@@ -80,6 +96,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onAddStudent: externalOnAddStudent,
   onUpdateStudent: externalOnUpdateStudent,
   onDeleteStudent: externalOnDeleteStudent,
+  onAddTeacher: externalOnAddTeacher,
+  onUpdateTeacher: externalOnUpdateTeacher,
+  onDeleteTeacher: externalOnDeleteTeacher,
   onLogout
 }) => {
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
@@ -90,6 +109,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [internalSubjects, setInternalSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
   const [internalActivities, setInternalActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
   const [students, setStudents] = useState<StudentAdmission[]>(INITIAL_STUDENTS);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
 
   const courses = externalCourses || internalCourses;
   const subjects = externalSubjects || internalSubjects;
@@ -215,6 +235,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     );
   };
 
+  // Handlers for Teachers
+  const handleAddTeacher = (
+    newTeacherData: Omit<Teacher, 'id' | 'registrationDate'>
+  ) => {
+    if (externalOnAddTeacher) {
+      externalOnAddTeacher(newTeacherData);
+    } else {
+      const today = new Date().toISOString().split('T')[0];
+      const newTeacher: Teacher = {
+        ...newTeacherData,
+        id: `tch-${Date.now()}`,
+        registrationDate: today
+      };
+      setTeachers((prev) => [newTeacher, ...prev]);
+    }
+  };
+
+  const handleDeleteTeacher = (id: string) => {
+    if (externalOnDeleteTeacher) {
+      externalOnDeleteTeacher(id);
+    } else {
+      setTeachers((prev) => prev.filter((t) => t.id !== id));
+    }
+  };
+
+  const handleUpdateTeacherStatus = (
+    id: string,
+    status: Teacher['status']
+  ) => {
+    if (externalOnUpdateTeacher) {
+      // Find the teacher and update
+      const teacher = teachers?.find(t => t.id === id);
+      if (teacher) {
+        externalOnUpdateTeacher({ ...teacher, status });
+      }
+    } else {
+      setTeachers((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status } : t))
+      );
+    }
+  };
+
   const navItems: {
     id: AdminSection;
     label: string;
@@ -241,7 +303,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     },
     {
       id: 'admissions',
-      label: 'Admitir Estudiantes',
+      label: 'Registrar Usuarios',
       icon: UserCheck,
       count: students.length
     },
@@ -256,13 +318,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       label: 'Publicidad Principal',
       icon: Airplay,
       count: mainAds?.length || 0
+    },
+    {
+      id: 'publicidad-lateral',
+      label: 'Publicidad Login',
+      icon: PanelLeft
+    },
+    {
+      id: 'recovery',
+      label: 'Recuperación Usuarios',
+      icon: KeyRound,
+      count: recoveryRequests?.filter(r => r.status === 'pending').length || 0
     }
   ];
 
   return (
     <div
       id="admin-panel-container"
-      className="min-h-screen w-full bg-slate-100 flex flex-col text-slate-800"
+      className="min-h-screen w-full bg-slate-100 flex flex-col text-blue-900"
     >
       {/* Top Admin Header */}
       <header
@@ -274,7 +347,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             id="admin-mobile-menu-toggle"
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            className="md:hidden p-2 text-slate-600 hover:text-blue-950 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Abrir menú de navegación"
           >
             {mobileMenuOpen ? (
@@ -285,19 +358,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </button>
 
           <div id="admin-brand-badge" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-700 to-teal-500 text-white flex items-center justify-center font-bold">
-              <Shield className="w-5 h-5" aria-hidden="true" />
-            </div>
-            <div>
-              <span className="font-semibold text-slate-900 text-base leading-none">
-                Panel Administrativo
-              </span>
-            </div>
+            <img src="/logofun01.png" alt="Fundación ULEP" className="h-8 w-auto object-contain" />
           </div>
         </div>
 
         {/* Right side controls */}
         <div id="admin-user-controls" className="flex items-center gap-3">
+          <GlobalStudentSearch students={students} />
+          <div className="h-7 w-px bg-slate-200 hidden sm:block" />
           <div className="hidden sm:flex flex-col text-right">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
               Administrador
@@ -319,13 +387,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       </header>
 
       {/* Admin Body: Sidebar + Main Area */}
-      <div className="flex-1 flex w-full">
+      <div className="flex-1 flex w-full relative">
+        {/* Mobile menu overlay */}
+        {mobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-slate-900/50 z-30 md:hidden backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        
         {/* Navigation Sidebar (Left Side) */}
         <aside
           id="admin-sidebar"
-          className={`${
-            mobileMenuOpen ? 'block' : 'hidden'
-          } md:block w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col justify-between p-4 z-20`}
+          className={`absolute md:relative inset-y-0 left-0 z-40 transform ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0 w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col justify-between p-4 transition-transform duration-200 ease-in-out h-full md:h-auto`}
         >
           <div className="space-y-6">
             <div>
@@ -347,8 +423,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
                         isActive
-                          ? 'bg-gradient-to-br from-blue-700 to-teal-500 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                          ? 'bg-gradient-to-br from-blue-900 to-sky-400 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-blue-950 hover:bg-slate-100'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -363,7 +439,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full font-mono ${
                             isActive
-                              ? 'bg-slate-800 text-slate-200'
+                              ? 'bg-blue-900 text-slate-200'
                               : 'bg-slate-100 text-slate-600'
                           }`}
                         >
@@ -381,7 +457,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         {/* Main Workspace Area */}
         <main
           id="admin-main-canvas"
-          className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col justify-start max-w-7xl mx-auto w-full"
+          className="flex-1 p-4 sm:p-6 md:p-8 flex flex-col justify-start max-w-7xl mx-auto w-full overflow-hidden overflow-y-auto"
         >
 
           {activeSection === 'dashboard' && (
@@ -412,12 +488,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           )}
 
           {activeSection === 'admissions' && (
-            <StudentsSection
+            <UserRegistrationSection
               students={students}
+              teachers={teachers}
               courses={courses}
               onAddStudent={handleAddStudent}
               onDeleteStudent={handleDeleteStudent}
-              onUpdateStatus={handleUpdateStudentStatus}
+              onUpdateStudentStatus={handleUpdateStudentStatus}
+              onAddTeacher={handleAddTeacher}
+              onDeleteTeacher={handleDeleteTeacher}
+              onUpdateTeacherStatus={handleUpdateTeacherStatus}
             />
           )}
 
@@ -437,6 +517,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <CentralAnnouncementSection
               announcement={centralAnnouncement}
               onUpdateAnnouncement={onCentralAnnouncementChange}
+            />
+          )}
+
+          {activeSection === 'publicidad-lateral' && sideAd && onSideAdChange && (
+            <SideAdSection
+              sideAd={sideAd}
+              onSideAdChange={onSideAdChange}
+            />
+          )}
+
+          {activeSection === 'recovery' && (
+            <PasswordRecoverySection
+              recoveryRequests={recoveryRequests || []}
+              onApproveRecovery={onApproveRecovery || (() => {})}
             />
           )}
         </main>

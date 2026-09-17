@@ -36,7 +36,24 @@ export interface StudentAdmission {
   status: 'Admitido' | 'Pendiente' | 'Matriculado';
 }
 
-export type AdminSection = 'dashboard' | 'courses' | 'subjects' | 'admissions' | 'banners' | 'publicidad-principal' | 'anuncio';
+export interface Teacher {
+  id: string;
+  fullName: string;
+  cedula: string;
+  email: string;
+  phone?: string;
+  initialPassword?: string;
+  courseIds: string[]; // Access to courses
+  registrationDate: string;
+  status: 'Activo' | 'Inactivo';
+}
+
+export type AdminSection = 'dashboard' | 'courses' | 'subjects' | 'admissions' | 'banners' | 'publicidad-principal' | 'anuncio' | 'recovery' | 'publicidad-lateral';
+
+export interface SideAd {
+  imageUrl: string;
+  active: boolean;
+}
 
 export interface CentralAnnouncement {
   title: string;
@@ -92,4 +109,11 @@ export interface Activity {
   // Interactive Reading with rich text and emojis
   readingContent?: string;
   readingEstimatedMinutes?: number;
+}
+
+export interface PasswordRecoveryRequest {
+  id: string;
+  identifier: string;
+  status: 'pending' | 'approved' | 'completed';
+  requestDate: string;
 }

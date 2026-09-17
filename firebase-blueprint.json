@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "Course": {
+      "title": "Course",
+      "description": "A course offered by the institution.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string" }
+      },
+      "required": ["name", "code"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "A subject within a course.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "credits": { "type": "number" },
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "professor": { "type": "string" },
+        "weeklyHours": { "type": "number" }
+      },
+      "required": ["name", "code", "credits", "courseId", "courseName", "professor", "weeklyHours"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "An academic activity assigned to students.",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "order": { "type": "number" },
+        "weight": { "type": "number" },
+        "type": { "type": "string" }
+      },
+      "required": ["subjectId", "title", "description", "dueDate", "order", "weight", "type"]
+    },
+    "StudentAdmission": {
+      "title": "Student Admission",
+      "description": "A student's admission record.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "cedula": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "admissionDate": { "type": "string" },
+        "registrationType": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["fullName", "cedula", "email", "courseId", "courseName", "admissionDate", "status"]
+    },
+    "Banner": {
+      "title": "Banner",
+      "description": "An advertising banner.",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string" },
+        "title": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["imageUrl", "title", "active"]
+    },
+    "CentralAnnouncement": {
+      "title": "Central Announcement",
+      "description": "The main announcement displayed on the portal.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["title", "content", "active"]
+    }
+  },
+  "firestore": {
+    "courses": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Stores all available courses."
+    },
+    "subjects": {
+      "schema": { "$ref": "#/entities/Subject" },
+      "description": "Stores all subjects related to courses."
+    },
+    "activities": {
+      "schema": { "$ref": "#/entities/Activity" },
+      "description": "Stores all academic activities."
+    },
+    "students": {
+      "schema": { "$ref": "#/entities/StudentAdmission" },
+      "description": "Stores all student admission records."
+    },
+    "banners": {
+      "schema": { "$ref": "#/entities/Banner" },
+      "description": "Stores general advertising banners."
+    },
+    "mainAds": {
+      "schema": { "$ref": "#/entities/Banner" },
+      "description": "Stores main advertising banners shown on login."
+    },
+    "centralAnnouncement": {
+      "schema": { "$ref": "#/entities/CentralAnnouncement" },
+      "description": "Stores the central announcement (single document)."
+    }
+  }
+}
