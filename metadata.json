@@ -1,0 +1,6 @@
+{
+  "name": "Inicio de Sesión",
+  "description": "Sistema de inicio de sesión con cédula y contraseña y panel de administración",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
