@@ -4,10 +4,19 @@ import { Image as ImageIcon, Plus, Trash2, Edit2, CheckCircle2, XCircle, Save, X
 
 interface MainAdsSectionProps {
   mainAds: Banner[];
-  onMainAdsChange: (mainAds: Banner[]) => void;
+  onMainAdsChange?: (mainAds: Banner[]) => void;
+  onAddMainAd?: (mainAd: Omit<Banner, 'id'>) => void;
+  onUpdateMainAd?: (mainAd: Banner) => void;
+  onDeleteMainAd?: (id: string) => void;
 }
 
-export const MainAdsSection: React.FC<MainAdsSectionProps> = ({ mainAds, onMainAdsChange }) => {
+export const MainAdsSection: React.FC<MainAdsSectionProps> = ({
+  mainAds,
+  onMainAdsChange,
+  onAddMainAd,
+  onUpdateMainAd,
+  onDeleteMainAd,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editImageUrl, setEditImageUrl] = useState('');
@@ -20,14 +29,21 @@ export const MainAdsSection: React.FC<MainAdsSectionProps> = ({ mainAds, onMainA
     e.preventDefault();
     if (!newImageUrl) return;
 
-    const newMainAd: Banner = {
-      id: `banner-${Date.now()}`,
-      imageUrl: newImageUrl,
-      title: newTitle,
-      active: true,
-    };
-    
-    onMainAdsChange([...mainAds, newMainAd]);
+    if (onAddMainAd) {
+      onAddMainAd({
+        imageUrl: newImageUrl,
+        title: newTitle,
+        active: true,
+      });
+    } else if (onMainAdsChange) {
+      const newMainAd: Banner = {
+        id: `banner-${Date.now()}`,
+        imageUrl: newImageUrl,
+        title: newTitle,
+        active: true,
+      };
+      onMainAdsChange([...mainAds, newMainAd]);
+    }
     setNewImageUrl('');
     setNewTitle('');
     setIsAdding(false);
@@ -49,22 +65,36 @@ export const MainAdsSection: React.FC<MainAdsSectionProps> = ({ mainAds, onMainA
     e.preventDefault();
     if (!editingId || !editImageUrl) return;
     
-    onMainAdsChange(
-      mainAds.map((b) => 
-        b.id === editingId ? { ...b, imageUrl: editImageUrl, title: editTitle } : b
-      )
-    );
+    const ad = mainAds.find(b => b.id === editingId);
+    if (ad && onUpdateMainAd) {
+      onUpdateMainAd({ ...ad, imageUrl: editImageUrl, title: editTitle });
+    } else if (onMainAdsChange) {
+      onMainAdsChange(
+        mainAds.map((b) => 
+          b.id === editingId ? { ...b, imageUrl: editImageUrl, title: editTitle } : b
+        )
+      );
+    }
     cancelEdit();
   };
 
   const handleToggleActive = (id: string) => {
-    onMainAdsChange(
-      mainAds.map((b) => (b.id === id ? { ...b, active: !b.active } : b))
-    );
+    const ad = mainAds.find(b => b.id === id);
+    if (ad && onUpdateMainAd) {
+      onUpdateMainAd({ ...ad, active: !ad.active });
+    } else if (onMainAdsChange) {
+      onMainAdsChange(
+        mainAds.map((b) => (b.id === id ? { ...b, active: !b.active } : b))
+      );
+    }
   };
 
   const handleDelete = (id: string) => {
-    onMainAdsChange(mainAds.filter((b) => b.id !== id));
+    if (onDeleteMainAd) {
+      onDeleteMainAd(id);
+    } else if (onMainAdsChange) {
+      onMainAdsChange(mainAds.filter((b) => b.id !== id));
+    }
   };
 
   return (

@@ -4,10 +4,12 @@ import { Image as ImageIcon, Plus, Trash2, Edit2, CheckCircle2, XCircle, Save, X
 
 interface BannersSectionProps {
   banners: Banner[];
-  onBannersChange: (banners: Banner[]) => void;
+  onAddBanner?: (banner: Omit<Banner, 'id'>) => void;
+  onUpdateBanner?: (banner: Banner) => void;
+  onDeleteBanner?: (id: string) => void;
 }
 
-export const BannersSection: React.FC<BannersSectionProps> = ({ banners, onBannersChange }) => {
+export const BannersSection: React.FC<BannersSectionProps> = ({ banners, onAddBanner, onUpdateBanner, onDeleteBanner }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editImageUrl, setEditImageUrl] = useState('');
@@ -19,15 +21,12 @@ export const BannersSection: React.FC<BannersSectionProps> = ({ banners, onBanne
   const handleAddBanner = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newImageUrl) return;
-
-    const newBanner: Banner = {
-      id: `banner-${Date.now()}`,
+    const newBanner = {
       imageUrl: newImageUrl,
       title: newTitle,
       active: true,
     };
-    
-    onBannersChange([...banners, newBanner]);
+    if (onAddBanner) onAddBanner(newBanner);
     setNewImageUrl('');
     setNewTitle('');
     setIsAdding(false);
@@ -48,23 +47,24 @@ export const BannersSection: React.FC<BannersSectionProps> = ({ banners, onBanne
   const saveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingId || !editImageUrl) return;
-    
-    onBannersChange(
-      banners.map((b) => 
-        b.id === editingId ? { ...b, imageUrl: editImageUrl, title: editTitle } : b
-      )
-    );
+    const banner = banners.find(b => b.id === editingId);
+    if (banner && onUpdateBanner) {
+      onUpdateBanner({ ...banner, imageUrl: editImageUrl, title: editTitle });
+    }
     cancelEdit();
   };
 
   const handleToggleActive = (id: string) => {
-    onBannersChange(
-      banners.map((b) => (b.id === id ? { ...b, active: !b.active } : b))
-    );
+    const banner = banners.find(b => b.id === id);
+    if (banner && onUpdateBanner) {
+      onUpdateBanner({ ...banner, active: !banner.active });
+    }
   };
 
   const handleDelete = (id: string) => {
-    onBannersChange(banners.filter((b) => b.id !== id));
+    if (onDeleteBanner) {
+      onDeleteBanner(id);
+    }
   };
 
   return (

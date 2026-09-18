@@ -1,27 +1,29 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/components/AdminPanel.tsx', 'utf8');
 
-code = code.replace(/import \{ Course, Subject, StudentAdmission, AdminSection, Activity, Banner \} from '\.\.\/types';/, `import { Course, Subject, StudentAdmission, AdminSection, Activity, Banner, CentralAnnouncement } from '../types';\nimport { Megaphone } from 'lucide-react';`);
+code = code.replace(
+  `  banners?: Banner[];\n  onBannersChange?: (banners: Banner[]) => void;`,
+  `  banners?: Banner[];\n  onAddBanner?: (banner: Omit<Banner, 'id'>) => void;\n  onUpdateBanner?: (banner: Banner) => void;\n  onDeleteBanner?: (id: string) => void;`
+);
 
-code = code.replace(/import \{ BannersSection \} from '\.\/BannersSection';/, `import { BannersSection } from './BannersSection';\nimport { CentralAnnouncementSection } from './CentralAnnouncementSection';`);
+code = code.replace(
+  `  mainAds?: Banner[];\n  onMainAdsChange?: (ads: Banner[]) => void;`,
+  `  mainAds?: Banner[];\n  onAddMainAd?: (ad: Omit<Banner, 'id'>) => void;\n  onUpdateMainAd?: (ad: Banner) => void;\n  onDeleteMainAd?: (id: string) => void;`
+);
 
-code = code.replace(/onBannersChange\?: \(banners: Banner\[\]\) => void;/, `onBannersChange?: (banners: Banner[]) => void;\n  centralAnnouncement?: CentralAnnouncement;\n  onCentralAnnouncementChange?: (announcement: CentralAnnouncement) => void;`);
+code = code.replace(
+  `  banners,\n  onBannersChange,\n  mainAds,\n  onMainAdsChange,`,
+  `  banners,\n  onAddBanner,\n  onUpdateBanner,\n  onDeleteBanner,\n  mainAds,\n  onAddMainAd,\n  onUpdateMainAd,\n  onDeleteMainAd,`
+);
 
-code = code.replace(/onBannersChange,/, `onBannersChange,\n  centralAnnouncement,\n  onCentralAnnouncementChange,`);
+code = code.replace(
+  `<BannersSection banners={banners || []} onBannersChange={onBannersChange || (() => {})} />`,
+  `<BannersSection banners={banners || []} onAddBanner={onAddBanner} onUpdateBanner={onUpdateBanner} onDeleteBanner={onDeleteBanner} />`
+);
 
-code = code.replace(/\{ id: 'banners', label: 'Banners Publicitarios', icon: ImageIcon, count: banners\?\.length \|\| 0 \}/, `{ id: 'banners', label: 'Banners Publicitarios', icon: ImageIcon, count: banners?.length || 0 }, { id: 'anuncio', label: 'Anuncio Central', icon: Megaphone }`);
-
-const renderString = `          {activeSection === 'anuncio' && centralAnnouncement && onCentralAnnouncementChange && (
-            <CentralAnnouncementSection
-              announcement={centralAnnouncement}
-              onUpdateAnnouncement={onCentralAnnouncementChange}
-            />
-          )}`;
-code = code.replace(/<BannersSection\s+banners=\{banners \|\| \[\]\}\s+onBannersChange=\{onBannersChange \|\| \(\(\) => \{\}\)\}\s+\/>\s+\)\}/, `<BannersSection
-              banners={banners || []}
-              onBannersChange={onBannersChange || (() => {})}
-            />
-          )}
-${renderString}`);
+code = code.replace(
+  `<MainAdsSection ads={mainAds || []} onAdsChange={onMainAdsChange || (() => {})} />`,
+  `<MainAdsSection ads={mainAds || []} onAddAd={onAddMainAd} onUpdateAd={onUpdateMainAd} onDeleteAd={onDeleteMainAd} />`
+);
 
 fs.writeFileSync('src/components/AdminPanel.tsx', code);

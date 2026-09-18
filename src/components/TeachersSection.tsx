@@ -59,8 +59,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
 
   const handleOpenForm = (mode: 'registro' | 'admision') => {
     setFormMode(mode);
-    setRegistrationType(mode === 'registro' ? 'Registro' : 'Admisión');
-    setStatus(mode === 'registro' ? 'Matriculado' : 'Admitido');
+    setStatus('Activo');
     setShowForm(true);
   };
 
@@ -75,9 +74,9 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
     e.preventDefault();
     if (!fullName.trim() || !cedula.trim()) return;
 
-    
+    const matchedCourse = courses.find(c => courseIds.includes(c.id));
     const courseName = matchedCourse ? matchedCourse.name : 'Curso General';
-    const finalPassword = initialPassword.trim() || `est-${cedula.trim()}`;
+    const finalPassword = initialPassword.trim() || `doc-${cedula.trim()}`;
 
     onAddTeacher({
       fullName: fullName.trim(),
@@ -227,8 +226,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   type="button"
                   onClick={() => {
                     setFormMode('registro');
-                    setRegistrationType('Registro');
-                    setStatus('Matriculado');
+                    setStatus('Activo');
                   }}
                   className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                     formMode === 'registro'
@@ -242,8 +240,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   type="button"
                   onClick={() => {
                     setFormMode('admision');
-                    setRegistrationType('Admisión');
-                    setStatus('Admitido');
+                    setStatus('Activo');
                   }}
                   className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                     formMode === 'admision'
@@ -356,7 +353,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   multiple
                   value={courseIds}
                   onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, option => option.value);
+                    const values = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
                     setCourseIds(values);
                   }}
                   className="w-full h-32 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"

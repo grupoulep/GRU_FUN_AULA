@@ -79,36 +79,101 @@
         "active": { "type": "boolean" }
       },
       "required": ["title", "content", "active"]
+    },
+    "SideAd": {
+      "title": "Side Ad",
+      "description": "The side advertisement displayed on login.",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["active"]
+    },
+    "PasswordRecoveryRequest": {
+      "title": "Password Recovery Request",
+      "description": "A request for password recovery.",
+      "type": "object",
+      "properties": {
+        "identifier": { "type": "string" },
+        "status": { "type": "string" },
+        "requestDate": { "type": "string" }
+      },
+      "required": ["identifier", "status", "requestDate"]
     }
   },
   "firestore": {
     "courses": {
       "schema": { "$ref": "#/entities/Course" },
-      "description": "Stores all available courses."
+      "description": "Stores all available courses.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     },
     "subjects": {
       "schema": { "$ref": "#/entities/Subject" },
-      "description": "Stores all subjects related to courses."
+      "description": "Stores all subjects related to courses.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     },
     "activities": {
       "schema": { "$ref": "#/entities/Activity" },
-      "description": "Stores all academic activities."
+      "description": "Stores all academic activities.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     },
     "students": {
       "schema": { "$ref": "#/entities/StudentAdmission" },
-      "description": "Stores all student admission records."
+      "description": "Stores all student admission records.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     },
     "banners": {
       "schema": { "$ref": "#/entities/Banner" },
-      "description": "Stores general advertising banners."
+      "description": "Stores general advertising banners.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     },
     "mainAds": {
       "schema": { "$ref": "#/entities/Banner" },
-      "description": "Stores main advertising banners shown on login."
+      "description": "Stores main advertising banners shown on login.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     },
     "centralAnnouncement": {
       "schema": { "$ref": "#/entities/CentralAnnouncement" },
-      "description": "Stores the central announcement (single document)."
+      "description": "Stores the central announcement (single document).",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
+    },
+    "sideAds": {
+      "schema": { "$ref": "#/entities/SideAd" },
+      "description": "Stores the side advertisement (single document).",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
+    },
+    "recoveryRequests": {
+      "schema": { "$ref": "#/entities/PasswordRecoveryRequest" },
+      "description": "Stores password recovery requests.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
     }
   }
 }

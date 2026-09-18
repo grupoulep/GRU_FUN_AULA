@@ -44,7 +44,9 @@ interface AdminPanelProps {
   onApproveRecovery?: (id: string) => void;
   onBannersChange?: (banners: Banner[]) => void;
   mainAds?: Banner[];
-  onMainAdsChange?: (ads: Banner[]) => void;
+  onAddMainAd?: (ad: Omit<Banner, 'id'>) => void;
+  onUpdateMainAd?: (ad: Banner) => void;
+  onDeleteMainAd?: (id: string) => void;
   sideAd?: SideAd;
   onSideAdChange?: (sideAd: SideAd) => void;
   centralAnnouncement?: CentralAnnouncement;
@@ -77,9 +79,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   recoveryRequests,
   onApproveRecovery,
   banners,
-  onBannersChange,
+  onAddBanner,
+  onUpdateBanner,
+  onDeleteBanner,
   mainAds,
-  onMainAdsChange,
+  onAddMainAd,
+  onUpdateMainAd,
+  onDeleteMainAd,
   sideAd,
   onSideAdChange,
   centralAnnouncement,
@@ -504,13 +510,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {activeSection === 'banners' && (
             <BannersSection
               banners={banners || []}
-              onBannersChange={onBannersChange || (() => {})}
+              onAddBanner={onAddBanner}
+              onUpdateBanner={onUpdateBanner}
+              onDeleteBanner={onDeleteBanner}
             />
           )}
-                    {activeSection === 'publicidad-principal' && (
+
+          {activeSection === 'publicidad-principal' && (
             <MainAdsSection
               mainAds={mainAds || []}
-              onMainAdsChange={onMainAdsChange || (() => {})}
+              onAddMainAd={onAddMainAd}
+              onUpdateMainAd={onUpdateMainAd}
+              onDeleteMainAd={onDeleteMainAd}
             />
           )}
           {activeSection === 'anuncio' && centralAnnouncement && onCentralAnnouncementChange && (

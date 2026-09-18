@@ -3,9 +3,8 @@ import { User, Lock, Eye, EyeOff, Shield, GraduationCap, School, X, Mail } from 
 import { AdminPanel } from './components/AdminPanel';
 import { StudentPortal } from './components/StudentPortal';
 import { TeacherPortal } from './components/TeacherPortal';
-import { Activity, Subject, Course, StudentAdmission, Banner, SideAd } from './types';
-import { INITIAL_ACTIVITIES, INITIAL_SUBJECTS, INITIAL_COURSES, INITIAL_STUDENTS, INITIAL_BANNERS, INITIAL_CENTRAL_ANNOUNCEMENT } from './data/initialAcademicData';
-import { CentralAnnouncement } from './types';
+import { Activity, Subject, Course, StudentAdmission, Banner, SideAd, CentralAnnouncement } from './types';
+import { useAcademicData } from './hooks/useAcademicData';
 
 type UserRole = 'admin' | 'student' | 'teacher';
 
@@ -21,144 +20,55 @@ export default function App() {
   const [newPassword, setNewPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
 
-  // Shared courses state across all portals
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
-
-  // Shared activities state editable by teachers and viewable/submittable by students
-  const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
-
-  // Shared subjects state editable by teachers/admins and viewable across portals
-  const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
-
-  // Shared students state to track admissions and assigned courses
-  const [students, setStudents] = useState<StudentAdmission[]>(INITIAL_STUDENTS);
-
-  const [banners, setBanners] = useState<Banner[]>(INITIAL_BANNERS);
-  const [mainAds, setMainAds] = useState<Banner[]>([]);
-  const [centralAnnouncement, setCentralAnnouncement] = useState<CentralAnnouncement>(INITIAL_CENTRAL_ANNOUNCEMENT);
-  
-  // Side Ad state
-  const [sideAd, setSideAd] = useState<SideAd>({ active: false, imageUrl: '' });
-  
-  // Password Recovery state
-  const [recoveryRequests, setRecoveryRequests] = useState<PasswordRecoveryRequest[]>([]);
+  const {
+    courses, activities, subjects, students, banners, mainAds, centralAnnouncement, sideAd, recoveryRequests,
+    addDocWithId, updateDocWithId, deleteDocWithId
+  } = useAcademicData();
   
   const handleRequestRecovery = (identifier: string) => {
-    setRecoveryRequests(prev => {
-      // Check if already pending or approved
-      const existing = prev.find(req => req.identifier === identifier && req.status !== 'completed');
-      if (existing) return prev;
-      
-      const newReq: PasswordRecoveryRequest = {
-        id: `rec-${Date.now()}`,
-        identifier,
-        status: 'pending',
-        requestDate: new Date().toISOString()
-      };
-      return [newReq, ...prev];
-    });
+    const existing = recoveryRequests.find(req => req.identifier === identifier && req.status !== 'completed');
+    if (existing) return;
+    const id = `rec-${Date.now()}`;
+    addDocWithId('recoveryRequests', id, { id, identifier, status: 'pending', requestDate: new Date().toISOString() });
+  };
+  const handleApproveRecovery = (id: string) => updateDocWithId('recoveryRequests', id, { status: 'approved' });
+  const handleCompleteRecovery = (identifier: string, _newPass: string) => {
+    const req = recoveryRequests.find(r => r.identifier === identifier && r.status === 'approved');
+    if (req) {
+      updateDocWithId('recoveryRequests', req.id, { status: 'completed' });
+    }
   };
   
-  const handleApproveRecovery = (id: string) => {
-    setRecoveryRequests(prev => 
-      prev.map(req => req.id === id ? { ...req, status: 'approved' } : req)
-    );
-  };
+  const handleAddCourse = (c: Omit<Course, 'id'>) => { const id = `crs-${Date.now()}`; addDocWithId('courses', id, { ...c, id }); };
+  const handleDeleteCourse = (id: string) => deleteDocWithId('courses', id);
+  const handleUpdateCourse = (c: Course) => updateDocWithId('courses', c.id, c);
   
-  const handleCompleteRecovery = (identifier: string, newPassword: string) => {
-    // We would actually update the student/teacher password here
-    setRecoveryRequests(prev => 
-      prev.map(req => req.identifier === identifier && req.status === 'approved' 
-        ? { ...req, status: 'completed' } 
-        : req
-      )
-    );
-    // Note: since students/teachers don't have a mutable password array in this simplified mock,
-    // we just mark the recovery as completed.
-  };
+  const handleAddSubject = (s: Omit<Subject, 'id'>) => { const id = `sbj-${Date.now()}`; addDocWithId('subjects', id, { ...s, id }); };
+  const handleDeleteSubject = (id: string) => deleteDocWithId('subjects', id);
+  const handleUpdateSubject = (s: Subject) => updateDocWithId('subjects', s.id, s);
+  
+  const handleAddActivity = (a: Omit<Activity, 'id'>) => { const id = `act-${Date.now()}`; addDocWithId('activities', id, { ...a, id }); };
+  const handleUpdateActivity = (a: Activity) => updateDocWithId('activities', a.id, a);
+  const handleDeleteActivity = (id: string) => deleteDocWithId('activities', id);
+  const handleSubmitActivity = (id: string, notes: string) => updateDocWithId('activities', id, { status: 'Entregada', submissionNotes: notes, submittedAt: new Date().toISOString() });
+  
+  const handleAddStudent = (s: Omit<StudentAdmission, 'id'>) => { const id = `std-${Date.now()}`; addDocWithId('students', id, { ...s, id }); };
+  const handleUpdateStudent = (s: StudentAdmission) => updateDocWithId('students', s.id, s);
+  const handleDeleteStudent = (id: string) => deleteDocWithId('students', id);
 
-  const handleAddCourse = (newCourseData: Omit<Course, 'id'>) => {
-    const newCourse: Course = {
-      ...newCourseData,
-      id: `crs-${Date.now()}`
-    };
-    setCourses((prev) => [newCourse, ...prev]);
-  };
+  const handleAddBanner = (b: Omit<Banner, 'id'>) => { const id = `banner-${Date.now()}`; addDocWithId('banners', id, { ...b, id }); };
+  const handleUpdateBanner = (b: Banner) => updateDocWithId('banners', b.id, b);
+  const handleDeleteBanner = (id: string) => deleteDocWithId('banners', id);
 
-  const handleDeleteCourse = (id: string) => {
-    setCourses((prev) => prev.filter((c) => c.id !== id));
-  };
-  const handleUpdateCourse = (updatedCourse: Course) => {
-    setCourses((prev) =>
-      prev.map((c) => (c.id === updatedCourse.id ? updatedCourse : c))
-    );
-  };
+  const handleAddMainAd = (b: Omit<Banner, 'id'>) => { const id = `mainad-${Date.now()}`; addDocWithId('mainAds', id, { ...b, id }); };
+  const handleUpdateMainAd = (b: Banner) => updateDocWithId('mainAds', b.id, b);
+  const handleDeleteMainAd = (id: string) => deleteDocWithId('mainAds', id);
 
-
-  const handleAddSubject = (newSubjectData: Omit<Subject, 'id'>) => {
-    const newSubject: Subject = {
-      ...newSubjectData,
-      id: `sbj-${Date.now()}`
-    };
-    setSubjects((prev) => [newSubject, ...prev]);
+  const handleCentralAnnouncementChange = (announcement: CentralAnnouncement) => {
+    addDocWithId('centralAnnouncement', 'singleton', announcement);
   };
-
-  const handleDeleteSubject = (id: string) => {
-    setSubjects((prev) => prev.filter((s) => s.id !== id));
-  };
-
-  const handleUpdateSubject = (updatedSubject: Subject) => {
-    setSubjects((prev) =>
-      prev.map((s) => (s.id === updatedSubject.id ? updatedSubject : s))
-    );
-  };
-
-  const handleAddActivity = (act: Omit<Activity, 'id'>) => {
-    const id = `act-${Date.now()}`;
-    setActivities((prev) => [...prev, { ...act, id }]);
-  };
-
-  const handleUpdateActivity = (updatedAct: Activity) => {
-    setActivities((prev) =>
-      prev.map((a) => (a.id === updatedAct.id ? updatedAct : a))
-    );
-  };
-
-  const handleDeleteActivity = (id: string) => {
-    setActivities((prev) => prev.filter((a) => a.id !== id));
-  };
-
-  const handleSubmitActivity = (activityId: string, notes: string) => {
-    setActivities((prev) =>
-      prev.map((a) =>
-        a.id === activityId
-          ? {
-              ...a,
-              status: 'Entregada',
-              submissionNotes: notes,
-              submittedAt: new Date().toISOString()
-            }
-          : a
-      )
-    );
-  };
-
-  const handleAddStudent = (newStudentData: Omit<StudentAdmission, 'id'>) => {
-    const newStudent: StudentAdmission = {
-      ...newStudentData,
-      id: `std-${Date.now()}`
-    };
-    setStudents((prev) => [newStudent, ...prev]);
-  };
-
-  const handleUpdateStudent = (updatedStudent: StudentAdmission) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === updatedStudent.id ? updatedStudent : s))
-    );
-  };
-
-  const handleDeleteStudent = (id: string) => {
-    setStudents((prev) => prev.filter((s) => s.id !== id));
+  const handleSideAdChange = (sa: SideAd) => {
+    addDocWithId('sideAds', 'singleton', sa);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -194,9 +104,9 @@ export default function App() {
     return (
       <AdminPanel
         centralAnnouncement={centralAnnouncement}
-        onCentralAnnouncementChange={setCentralAnnouncement}
+        onCentralAnnouncementChange={handleCentralAnnouncementChange}
         sideAd={sideAd}
-        onSideAdChange={setSideAd}
+        onSideAdChange={handleSideAdChange}
         cedula={username}
         courses={courses}
         subjects={subjects}
@@ -206,8 +116,12 @@ export default function App() {
         mainAds={mainAds}
         recoveryRequests={recoveryRequests}
         onApproveRecovery={handleApproveRecovery}
-        onBannersChange={setBanners}
-        onMainAdsChange={setMainAds}
+        onAddBanner={handleAddBanner}
+        onUpdateBanner={handleUpdateBanner}
+        onDeleteBanner={handleDeleteBanner}
+        onAddMainAd={handleAddMainAd}
+        onUpdateMainAd={handleUpdateMainAd}
+        onDeleteMainAd={handleDeleteMainAd}
         onAddCourse={handleAddCourse}
         onDeleteCourse={handleDeleteCourse}
             onUpdateCourse={handleUpdateCourse}
