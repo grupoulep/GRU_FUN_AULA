@@ -42,6 +42,7 @@ export interface Teacher {
   cedula: string;
   email: string;
   phone?: string;
+  courseName?: string;
   initialPassword?: string;
   courseIds: string[]; // Access to courses
   registrationDate: string;

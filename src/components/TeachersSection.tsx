@@ -60,13 +60,16 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
   const handleOpenForm = (mode: 'registro' | 'admision') => {
     setFormMode(mode);
     setStatus('Activo');
+    if (courses.length > 0 && courseIds.length === 0) {
+      setCourseIds([courses[0].id]);
+    }
     setShowForm(true);
   };
 
   const handleCedulaChange = (val: string) => {
     setCedula(val);
-    if (!initialPassword || initialPassword.startsWith('est-')) {
-      setInitialPassword(val ? `est-${val.trim()}` : '');
+    if (!initialPassword || initialPassword.startsWith('doc-') || initialPassword.startsWith('est-')) {
+      setInitialPassword(val ? `doc-${val.trim()}` : '');
     }
   };
 
@@ -74,18 +77,18 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
     e.preventDefault();
     if (!fullName.trim() || !cedula.trim()) return;
 
-    const matchedCourse = courses.find(c => courseIds.includes(c.id));
+    const matchedCourse = courses.find(c => courseIds.includes(c.id)) || courses[0];
     const courseName = matchedCourse ? matchedCourse.name : 'Curso General';
+    const finalCourseIds = courseIds.length > 0 ? courseIds : (matchedCourse ? [matchedCourse.id] : ['general']);
     const finalPassword = initialPassword.trim() || `doc-${cedula.trim()}`;
 
     onAddTeacher({
       fullName: fullName.trim(),
       cedula: cedula.trim(),
       email: email.trim() || `${cedula.trim()}@institucion.edu`,
-      phone: phone.trim() || undefined,
-      courseIds,
+      phone: phone.trim() || '',
+      courseIds: finalCourseIds,
       courseName,
-      
       initialPassword: finalPassword,
       status
     });
@@ -358,11 +361,15 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   }}
                   className="w-full h-32 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
                 >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} (Código: {c.code})
-                    </option>
-                  ))}
+                  {courses.length === 0 ? (
+                    <option value="general">Curso General (Sin cursos creados aún)</option>
+                  ) : (
+                    courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} (Código: {c.code})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

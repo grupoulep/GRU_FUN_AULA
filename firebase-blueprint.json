@@ -57,6 +57,22 @@
       },
       "required": ["fullName", "cedula", "email", "courseId", "courseName", "admissionDate", "status"]
     },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "A teacher's record.",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "cedula": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "courseName": { "type": "string" },
+        "courseIds": { "type": "array", "items": { "type": "string" } },
+        "registrationDate": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["fullName", "cedula", "email", "registrationDate", "status"]
+    },
     "Banner": {
       "title": "Banner",
       "description": "An advertising banner.",
@@ -130,6 +146,14 @@
     "students": {
       "schema": { "$ref": "#/entities/StudentAdmission" },
       "description": "Stores all student admission records.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
+    },
+    "teachers": {
+      "schema": { "$ref": "#/entities/Teacher" },
+      "description": "Stores all teacher records.",
       "rules": {
         "read": "true",
         "write": "true"

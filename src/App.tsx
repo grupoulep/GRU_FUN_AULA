@@ -3,7 +3,7 @@ import { User, Lock, Eye, EyeOff, Shield, GraduationCap, School, X, Mail } from 
 import { AdminPanel } from './components/AdminPanel';
 import { StudentPortal } from './components/StudentPortal';
 import { TeacherPortal } from './components/TeacherPortal';
-import { Activity, Subject, Course, StudentAdmission, Banner, SideAd, CentralAnnouncement } from './types';
+import { Activity, Subject, Course, StudentAdmission, Teacher, Banner, SideAd, CentralAnnouncement } from './types';
 import { useAcademicData } from './hooks/useAcademicData';
 
 type UserRole = 'admin' | 'student' | 'teacher';
@@ -21,7 +21,7 @@ export default function App() {
   const [repeatPassword, setRepeatPassword] = useState('');
 
   const {
-    courses, activities, subjects, students, banners, mainAds, centralAnnouncement, sideAd, recoveryRequests,
+    courses, activities, subjects, students, teachers, banners, mainAds, centralAnnouncement, sideAd, recoveryRequests,
     addDocWithId, updateDocWithId, deleteDocWithId
   } = useAcademicData();
   
@@ -56,6 +56,10 @@ export default function App() {
   const handleUpdateStudent = (s: StudentAdmission) => updateDocWithId('students', s.id, s);
   const handleDeleteStudent = (id: string) => deleteDocWithId('students', id);
 
+  const handleAddTeacher = (t: Omit<Teacher, 'id'>) => { const id = `tch-${Date.now()}`; addDocWithId('teachers', id, { ...t, id }); };
+  const handleUpdateTeacher = (t: Teacher) => updateDocWithId('teachers', t.id, t);
+  const handleDeleteTeacher = (id: string) => deleteDocWithId('teachers', id);
+
   const handleAddBanner = (b: Omit<Banner, 'id'>) => { const id = `banner-${Date.now()}`; addDocWithId('banners', id, { ...b, id }); };
   const handleUpdateBanner = (b: Banner) => updateDocWithId('banners', b.id, b);
   const handleDeleteBanner = (id: string) => deleteDocWithId('banners', id);
@@ -87,6 +91,32 @@ export default function App() {
       return;
     }
 
+    // Check teacher credentials
+    const teacherMatch = teachers.find(
+      (t) => t.cedula.trim() === username.trim() || t.cedula.trim().toUpperCase() === cleanUser
+    );
+    if (teacherMatch) {
+      const expectedPass = (teacherMatch.initialPassword || `doc-${teacherMatch.cedula}`).trim();
+      if (password.trim() === expectedPass || password.trim().toUpperCase() === expectedPass.toUpperCase()) {
+        setErrorMessage('');
+        setCurrentRole('teacher');
+        return;
+      }
+    }
+
+    // Check student credentials
+    const studentMatch = students.find(
+      (s) => s.cedula.trim() === username.trim() || s.cedula.trim().toUpperCase() === cleanUser
+    );
+    if (studentMatch) {
+      const expectedPass = (studentMatch.initialPassword || `est-${studentMatch.cedula}`).trim();
+      if (password.trim() === expectedPass || password.trim().toUpperCase() === expectedPass.toUpperCase()) {
+        setErrorMessage('');
+        setCurrentRole('student');
+        return;
+      }
+    }
+
     setErrorMessage(
       'Usuario o contraseña incorrectos. Verifique sus credenciales.'
     );
@@ -112,6 +142,7 @@ export default function App() {
         subjects={subjects}
         activities={activities}
         students={students}
+        teachers={teachers}
         banners={banners}
         mainAds={mainAds}
         recoveryRequests={recoveryRequests}
@@ -124,7 +155,7 @@ export default function App() {
         onDeleteMainAd={handleDeleteMainAd}
         onAddCourse={handleAddCourse}
         onDeleteCourse={handleDeleteCourse}
-            onUpdateCourse={handleUpdateCourse}
+        onUpdateCourse={handleUpdateCourse}
         onAddSubject={handleAddSubject}
         onDeleteSubject={handleDeleteSubject}
         onAddActivity={handleAddActivity}
@@ -133,6 +164,9 @@ export default function App() {
         onAddStudent={handleAddStudent}
         onUpdateStudent={handleUpdateStudent}
         onDeleteStudent={handleDeleteStudent}
+        onAddTeacher={handleAddTeacher}
+        onUpdateTeacher={handleUpdateTeacher}
+        onDeleteTeacher={handleDeleteTeacher}
         onLogout={handleLogout}
       />
     );

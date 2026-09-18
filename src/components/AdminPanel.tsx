@@ -114,12 +114,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [internalCourses, setInternalCourses] = useState<Course[]>(INITIAL_COURSES);
   const [internalSubjects, setInternalSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
   const [internalActivities, setInternalActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
-  const [students, setStudents] = useState<StudentAdmission[]>(INITIAL_STUDENTS);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [internalStudents, setInternalStudents] = useState<StudentAdmission[]>(INITIAL_STUDENTS);
+  const [internalTeachers, setInternalTeachers] = useState<Teacher[]>([]);
 
   const courses = externalCourses || internalCourses;
   const subjects = externalSubjects || internalSubjects;
   const activities = externalActivities || internalActivities;
+  const students = externalStudents || internalStudents;
+  const teachers = externalTeachers || internalTeachers;
 
   // Handlers for Courses
   const handleAddCourse = (newCourseData: Omit<Course, 'id'>) => {
@@ -219,42 +221,62 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     newStudentData: Omit<StudentAdmission, 'id' | 'admissionDate'>
   ) => {
     const today = new Date().toISOString().split('T')[0];
-    const newStudent: StudentAdmission = {
-      ...newStudentData,
-      id: `std-${Date.now()}`,
-      admissionDate: today
-    };
-
-    setStudents((prev) => [newStudent, ...prev]);
+    if (externalOnAddStudent) {
+      externalOnAddStudent({
+        ...newStudentData,
+        admissionDate: today
+      });
+    } else {
+      const newStudent: StudentAdmission = {
+        ...newStudentData,
+        id: `std-${Date.now()}`,
+        admissionDate: today
+      };
+      setInternalStudents((prev) => [newStudent, ...prev]);
+    }
   };
 
   const handleDeleteStudent = (id: string) => {
-    setStudents((prev) => prev.filter((s) => s.id !== id));
+    if (externalOnDeleteStudent) {
+      externalOnDeleteStudent(id);
+    } else {
+      setInternalStudents((prev) => prev.filter((s) => s.id !== id));
+    }
   };
 
   const handleUpdateStudentStatus = (
     id: string,
     status: StudentAdmission['status']
   ) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status } : s))
-    );
+    if (externalOnUpdateStudent) {
+      const student = students.find((s) => s.id === id);
+      if (student) {
+        externalOnUpdateStudent({ ...student, status });
+      }
+    } else {
+      setInternalStudents((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status } : s))
+      );
+    }
   };
 
   // Handlers for Teachers
   const handleAddTeacher = (
     newTeacherData: Omit<Teacher, 'id' | 'registrationDate'>
   ) => {
+    const today = new Date().toISOString().split('T')[0];
     if (externalOnAddTeacher) {
-      externalOnAddTeacher(newTeacherData);
+      externalOnAddTeacher({
+        ...newTeacherData,
+        registrationDate: today
+      });
     } else {
-      const today = new Date().toISOString().split('T')[0];
       const newTeacher: Teacher = {
         ...newTeacherData,
         id: `tch-${Date.now()}`,
         registrationDate: today
       };
-      setTeachers((prev) => [newTeacher, ...prev]);
+      setInternalTeachers((prev) => [newTeacher, ...prev]);
     }
   };
 
@@ -262,7 +284,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (externalOnDeleteTeacher) {
       externalOnDeleteTeacher(id);
     } else {
-      setTeachers((prev) => prev.filter((t) => t.id !== id));
+      setInternalTeachers((prev) => prev.filter((t) => t.id !== id));
     }
   };
 
@@ -271,13 +293,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     status: Teacher['status']
   ) => {
     if (externalOnUpdateTeacher) {
-      // Find the teacher and update
-      const teacher = teachers?.find(t => t.id === id);
+      const teacher = teachers.find(t => t.id === id);
       if (teacher) {
         externalOnUpdateTeacher({ ...teacher, status });
       }
     } else {
-      setTeachers((prev) =>
+      setInternalTeachers((prev) =>
         prev.map((t) => (t.id === id ? { ...t, status } : t))
       );
     }

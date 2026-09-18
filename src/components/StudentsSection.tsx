@@ -63,6 +63,9 @@ export const StudentsSection: React.FC<StudentsSectionProps> = ({
     setFormMode(mode);
     setRegistrationType(mode === 'registro' ? 'Registro' : 'Admisión');
     setStatus(mode === 'registro' ? 'Matriculado' : 'Admitido');
+    if (!courseId && courses.length > 0) {
+      setCourseId(courses[0].id);
+    }
     setShowForm(true);
   };
 
@@ -77,16 +80,17 @@ export const StudentsSection: React.FC<StudentsSectionProps> = ({
     e.preventDefault();
     if (!fullName.trim() || !cedula.trim()) return;
 
-    const matchedCourse = courses.find((c) => c.id === courseId);
+    const matchedCourse = courses.find((c) => c.id === courseId) || courses[0];
     const courseName = matchedCourse ? matchedCourse.name : 'Curso General';
+    const finalCourseId = matchedCourse ? matchedCourse.id : (courseId || 'general');
     const finalPassword = initialPassword.trim() || `est-${cedula.trim()}`;
 
     onAddStudent({
       fullName: fullName.trim(),
       cedula: cedula.trim(),
       email: email.trim() || `${cedula.trim()}@institucion.edu`,
-      phone: phone.trim() || undefined,
-      courseId: courseId || (courses[0]?.id ?? 'default'),
+      phone: phone.trim() || '',
+      courseId: finalCourseId,
       courseName,
       registrationType: formMode === 'registro' ? registrationType : 'Admisión',
       initialPassword: finalPassword,
@@ -359,11 +363,15 @@ export const StudentsSection: React.FC<StudentsSectionProps> = ({
                   onChange={(e) => setCourseId(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
                 >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} (Código: {c.code})
-                    </option>
-                  ))}
+                  {courses.length === 0 ? (
+                    <option value="">Curso General (Sin cursos creados aún)</option>
+                  ) : (
+                    courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} (Código: {c.code})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

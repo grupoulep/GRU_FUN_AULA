@@ -13,6 +13,9 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read, write: if true;
     }
+    match /teachers/{teacherId} {
+      allow read, write: if true;
+    }
     match /banners/{bannerId} {
       allow read, write: if true;
     }

@@ -1,13 +1,30 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Course, Subject, StudentAdmission, Activity, Banner, CentralAnnouncement, SideAd, PasswordRecoveryRequest } from '../types';
+import { Course, Subject, StudentAdmission, Teacher, Activity, Banner, CentralAnnouncement, SideAd, PasswordRecoveryRequest } from '../types';
+
+function sanitizeForFirestore(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeForFirestore);
+  }
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      result[key] = sanitizeForFirestore(value);
+    }
+  }
+  return result;
+}
 
 export function useAcademicData() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [students, setStudents] = useState<StudentAdmission[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [mainAds, setMainAds] = useState<Banner[]>([]);
   const [centralAnnouncement, setCentralAnnouncement] = useState<CentralAnnouncement | null>(null);
@@ -45,6 +62,14 @@ export function useAcademicData() {
         setStudents(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as StudentAdmission)));
       },
       (err) => console.warn('Firestore listener [students]:', err.message)
+    );
+
+    const unsubTeachers = onSnapshot(
+      collection(db, 'teachers'),
+      (snapshot) => {
+        setTeachers(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Teacher)));
+      },
+      (err) => console.warn('Firestore listener [teachers]:', err.message)
     );
 
     const unsubBanners = onSnapshot(
@@ -100,6 +125,7 @@ export function useAcademicData() {
       unsubActivities();
       unsubSubjects();
       unsubStudents();
+      unsubTeachers();
       unsubBanners();
       unsubMainAds();
       unsubCentral();
@@ -110,7 +136,8 @@ export function useAcademicData() {
 
   const addDocWithId = async (colName: string, id: string, data: any) => {
     try {
-      await setDoc(doc(db, colName, id), data);
+      const sanitized = sanitizeForFirestore(data);
+      await setDoc(doc(db, colName, id), sanitized);
     } catch (err: any) {
       console.error(`Error adding doc to ${colName}:`, err.message);
     }
@@ -118,7 +145,8 @@ export function useAcademicData() {
 
   const updateDocWithId = async (colName: string, id: string, data: any) => {
     try {
-      await updateDoc(doc(db, colName, id), data);
+      const sanitized = sanitizeForFirestore(data);
+      await updateDoc(doc(db, colName, id), sanitized);
     } catch (err: any) {
       console.error(`Error updating doc in ${colName}:`, err.message);
     }
@@ -133,7 +161,7 @@ export function useAcademicData() {
   };
 
   return {
-    courses, activities, subjects, students, banners, mainAds, centralAnnouncement, sideAd, recoveryRequests,
+    courses, activities, subjects, students, teachers, banners, mainAds, centralAnnouncement, sideAd, recoveryRequests,
     addDocWithId, updateDocWithId, deleteDocWithId
   };
 }
