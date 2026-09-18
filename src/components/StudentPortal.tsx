@@ -115,12 +115,14 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   // Find the current student
   const currentStudent = students.find((s) => s.cedula === username);
 
-  // Filter courses based on student's assigned course (if found, otherwise show all for fallback)
+  // Filter courses based on student's assigned courses (if found, otherwise show all for fallback)
   const studentCourses = currentStudent
     ? courses.filter(
         (c) =>
           c.id === currentStudent.courseId ||
-          (currentStudent.courseName && c.name.toLowerCase() === currentStudent.courseName.toLowerCase())
+          (currentStudent.courseIds && currentStudent.courseIds.includes(c.id)) ||
+          (currentStudent.courseName && c.name.toLowerCase() === currentStudent.courseName.toLowerCase()) ||
+          (currentStudent.courseName && currentStudent.courseName.toLowerCase().includes(c.name.toLowerCase()))
       )
     : courses;
 

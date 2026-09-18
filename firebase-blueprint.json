@@ -51,6 +51,7 @@
         "phone": { "type": "string" },
         "courseId": { "type": "string" },
         "courseName": { "type": "string" },
+        "courseIds": { "type": "array", "items": { "type": "string" } },
         "admissionDate": { "type": "string" },
         "registrationType": { "type": "string" },
         "status": { "type": "string" }

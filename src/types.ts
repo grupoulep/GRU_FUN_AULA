@@ -30,6 +30,7 @@ export interface StudentAdmission {
   phone?: string;
   courseId: string;
   courseName: string;
+  courseIds?: string[];
   admissionDate: string;
   registrationType?: 'Admisión' | 'Registro' | 'Matrícula';
   initialPassword?: string;

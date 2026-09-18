@@ -84,9 +84,14 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
     ? courses.find(c => c.id === gradingSubject.courseId || (gradingSubject.courseName && c.name.toLowerCase() === gradingSubject.courseName.toLowerCase()))
     : null;
     
-  const gradingStudents = students.filter(st => {
+  const gradingStudents = students.filter((st) => {
     if (!gradingCourse) return true;
-    return st.courseId === gradingCourse.id || (st.courseName && st.courseName.toLowerCase() === gradingCourse.name.toLowerCase());
+    return (
+      st.courseId === gradingCourse.id ||
+      (st.courseIds && st.courseIds.includes(gradingCourse.id)) ||
+      (st.courseName && st.courseName.toLowerCase() === gradingCourse.name.toLowerCase()) ||
+      (st.courseName && st.courseName.toLowerCase().includes(gradingCourse.name.toLowerCase()))
+    );
   });
 
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Teacher, Course } from '../types';
+import { CourseMultiSelect } from './CourseMultiSelect';
 import {
   UserPlus,
   UserCheck,
@@ -77,9 +78,13 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
     e.preventDefault();
     if (!fullName.trim() || !cedula.trim()) return;
 
-    const matchedCourse = courses.find(c => courseIds.includes(c.id)) || courses[0];
-    const courseName = matchedCourse ? matchedCourse.name : 'Curso General';
-    const finalCourseIds = courseIds.length > 0 ? courseIds : (matchedCourse ? [matchedCourse.id] : ['general']);
+    const matchedCourses = courses.filter((c) => courseIds.includes(c.id));
+    const courseNames = matchedCourses.length > 0
+      ? matchedCourses.map((c) => c.name).join(', ')
+      : (courses[0]?.name || 'Curso General');
+    const finalCourseIds = courseIds.length > 0
+      ? courseIds
+      : (courses[0] ? [courses[0].id] : ['general']);
     const finalPassword = initialPassword.trim() || `doc-${cedula.trim()}`;
 
     onAddTeacher({
@@ -88,7 +93,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
       email: email.trim() || `${cedula.trim()}@institucion.edu`,
       phone: phone.trim() || '',
       courseIds: finalCourseIds,
-      courseName,
+      courseName: courseNames,
       initialPassword: finalPassword,
       status
     });
@@ -343,34 +348,15 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 />
               </div>
 
-              {/* Assigned Course */}
+              {/* Assigned Courses (One or Multiple) */}
               <div>
-                <label
-                  htmlFor="teacher-course-select"
-                  className="block text-xs font-medium text-slate-700 mb-1"
-                >
-                  Curso / Programa Académico
-                </label>
-                <select
+                <CourseMultiSelect
                   id="teacher-course-select"
-                  multiple
-                  value={courseIds}
-                  onChange={(e) => {
-                    const values = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
-                    setCourseIds(values);
-                  }}
-                  className="w-full h-32 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
-                >
-                  {courses.length === 0 ? (
-                    <option value="general">Curso General (Sin cursos creados aún)</option>
-                  ) : (
-                    courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} (Código: {c.code})
-                      </option>
-                    ))
-                  )}
-                </select>
+                  courses={courses}
+                  selectedCourseIds={courseIds}
+                  onChange={setCourseIds}
+                  label="Curso(s) / Programa(s) Académico(s) (Permite uno o varios cursos)"
+                />
               </div>
 
               {/* Initial Password for Teacher Portal Access */}
@@ -545,13 +531,30 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                       </div>
                     </td>
 
-                    {/* Course */}
+                    {/* Course(s) */}
                     <td className="py-3 px-3 text-slate-700">
-                      <div className="flex items-center gap-1">
-                        <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate max-w-[200px]" title={std.courseName}>
-                          {std.courseName}
-                        </span>
+                      <div className="flex flex-col gap-1 max-w-[240px]">
+                        <div className="flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="font-semibold text-slate-900 text-xs truncate" title={std.courseName}>
+                            {std.courseName}
+                          </span>
+                        </div>
+                        {std.courseIds && std.courseIds.length > 1 && (
+                          <div className="flex flex-wrap gap-1">
+                            {std.courseIds.map((cId) => {
+                              const cMatch = courses.find((c) => c.id === cId);
+                              return (
+                                <span
+                                  key={cId}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200"
+                                >
+                                  {cMatch ? cMatch.code : cId}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </td>
 
@@ -674,21 +677,32 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                     <span className="text-slate-800">{selectedTeacher.phone}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Programa Asignado:</span>
-                  <span className="font-semibold text-slate-800 text-right max-w-[200px] truncate">
-                    {selectedTeacher.courseName}
-                  </span>
+                <div className="flex flex-col gap-1 border-t border-slate-100 pt-1.5">
+                  <div className="flex justify-between items-start">
+                    <span className="text-slate-500 font-medium">Programa(s) Asignado(s):</span>
+                    <span className="font-semibold text-slate-800 text-right max-w-[220px]">
+                      {selectedTeacher.courseName}
+                    </span>
+                  </div>
+                  {selectedTeacher.courseIds && selectedTeacher.courseIds.length > 0 && (
+                    <div className="flex flex-wrap justify-end gap-1 mt-1">
+                      {selectedTeacher.courseIds.map((cId) => {
+                        const cMatch = courses.find((c) => c.id === cId);
+                        return (
+                          <span
+                            key={cId}
+                            className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800"
+                          >
+                            {cMatch ? `${cMatch.name} (${cMatch.code})` : cId}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Fecha de Admisión:</span>
+                  <span className="text-slate-500 font-medium">Fecha de Registro:</span>
                   <span className="font-mono text-slate-700">{selectedTeacher.registrationDate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Tipo de Trámite:</span>
-                  <span className="font-semibold text-slate-800">
-                    
-                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 font-medium">Estado:</span>
@@ -710,7 +724,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                     onClick={() =>
                       copyToClipboard(
                         `Usuario (C.I.): ${selectedTeacher.cedula}\nContraseña: ${
-                          selectedTeacher.initialPassword || `est-${selectedTeacher.cedula}`
+                          selectedTeacher.initialPassword || `doc-${selectedTeacher.cedula}`
                         }`
                       )
                     }
@@ -725,7 +739,7 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   <div>
                     Clave Inicial:{' '}
                     <strong>
-                      {selectedTeacher.initialPassword || `est-${selectedTeacher.cedula}`}
+                      {selectedTeacher.initialPassword || `doc-${selectedTeacher.cedula}`}
                     </strong>
                   </div>
                 </div>
