@@ -31,5 +31,8 @@ service cloud.firestore {
     match /recoveryRequests/{reqId} {
       allow read, write: if true;
     }
+    match /grades/{gradeId} {
+      allow read, write: if true;
+    }
   }
 }

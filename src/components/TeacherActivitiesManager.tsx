@@ -626,7 +626,7 @@ export const TeacherActivitiesManager: React.FC<TeacherActivitiesManagerProps> =
                 </label>
                 <select
                   id="teacher-subject-select"
-                  value={currentSubject?.id}
+                  value={currentSubject?.id || ''}
                   onChange={(e) => onSelectSubjectId(e.target.value)}
                   className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-700 cursor-pointer"
                 >
@@ -1351,6 +1351,13 @@ export const TeacherActivitiesManager: React.FC<TeacherActivitiesManagerProps> =
                         <span className="inline-flex items-center gap-1 font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
                           <BookOpen className="w-3 h-3 text-purple-600" />
                           <span>Lectura ({act.readingEstimatedMinutes || 5} min) ✨</span>
+                        </span>
+                      )}
+
+                      {act.status === 'Entregada' && (
+                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>Entregas registradas ({act.submissionNotes ? 'Con notas' : 'Completada'})</span>
                         </span>
                       )}
                     </div>

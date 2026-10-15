@@ -1,7 +1,12 @@
+export type ProgramType = 'Curso' | 'Técnico';
+
 export interface Course {
   id: string;
   name: string;
   code: string;
+  programType?: ProgramType;
+  duration?: string;
+  description?: string;
 }
 
 export interface Banner {
@@ -19,6 +24,8 @@ export interface Subject {
   courseId: string;
   courseName: string;
   professor: string;
+  professorId?: string;
+  professorCedula?: string;
   weeklyHours: number;
 }
 
@@ -50,7 +57,7 @@ export interface Teacher {
   status: 'Activo' | 'Inactivo';
 }
 
-export type AdminSection = 'dashboard' | 'courses' | 'subjects' | 'admissions' | 'banners' | 'publicidad-principal' | 'anuncio' | 'recovery' | 'publicidad-lateral';
+export type AdminSection = 'dashboard' | 'courses' | 'subjects' | 'teacher-organization' | 'admissions' | 'banners' | 'publicidad-principal' | 'anuncio' | 'recovery' | 'publicidad-lateral';
 
 export interface SideAd {
   imageUrl: string;
@@ -118,4 +125,20 @@ export interface PasswordRecoveryRequest {
   identifier: string;
   status: 'pending' | 'approved' | 'completed';
   requestDate: string;
+}
+
+export interface StudentGrade {
+  id: string; // `${studentId}_${subjectId}`
+  studentId: string;
+  studentCedula: string;
+  studentName: string;
+  subjectId: string;
+  subjectName: string;
+  courseId: string;
+  corte1?: number; // 30%
+  corte2?: number; // 30%
+  corte3?: number; // 40%
+  definitiva?: number;
+  updatedAt?: string;
+  feedback?: string;
 }

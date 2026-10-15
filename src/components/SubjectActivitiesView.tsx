@@ -139,13 +139,6 @@ export const SubjectActivitiesView: React.FC<SubjectActivitiesViewProps> = ({
     const questions = activeExamActivity.examQuestions;
     const answeredCount = Object.keys(examSelectedAnswers).length;
 
-    if (examTimeLeftSeconds > 0 && answeredCount < questions.length) {
-      const confirmIncomplete = window.confirm(
-        `Has respondido ${answeredCount} de ${questions.length} preguntas. ¿Deseas enviar el examen de todos modos?`
-      );
-      if (!confirmIncomplete) return;
-    }
-
     setExamState('results');
     
     // Calculate score
@@ -738,7 +731,7 @@ export const SubjectActivitiesView: React.FC<SubjectActivitiesViewProps> = ({
                                    <span className="text-slate-400 px-2">→</span>
                                    <select
                                      disabled={examState === 'results'}
-                                     value={selectedMatch}
+                                     value={selectedMatch || ''}
                                      onChange={(e) => {
                                        handleSelectExamAnswer(question.id, { ...ansObj, [pair.item]: e.target.value });
                                      }}

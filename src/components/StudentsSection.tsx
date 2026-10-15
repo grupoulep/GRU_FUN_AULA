@@ -603,7 +603,7 @@ export const StudentsSection: React.FC<StudentsSectionProps> = ({
                     <td className="py-3 px-3 text-center">
                       <select
                         id={`select-status-${std.id}`}
-                        value={std.status}
+                        value={std.status || 'Admitido'}
                         onChange={(e) =>
                           onUpdateStatus(
                             std.id,

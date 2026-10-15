@@ -12,17 +12,19 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { Teacher, Course, Subject, StudentAdmission, AdminSection, Activity, Banner, CentralAnnouncement, PasswordRecoveryRequest, SideAd } from '../types';
-import { Megaphone, Airplay, KeyRound, PanelLeft } from 'lucide-react';
+import { Megaphone, Airplay, KeyRound, PanelLeft, Users } from 'lucide-react';
 import {
   INITIAL_COURSES,
   INITIAL_SUBJECTS,
   INITIAL_STUDENTS,
+  INITIAL_TEACHERS,
   INITIAL_ACTIVITIES
 } from '../data/initialAcademicData';
 import { GlobalStudentSearch } from "./GlobalStudentSearch";
 import { DashboardOverview } from './DashboardOverview';
 import { CoursesSection } from './CoursesSection';
 import { SubjectsSection } from './SubjectsSection';
+import { TeacherOrganizationSection } from './TeacherOrganizationSection';
 import { UserRegistrationSection } from './UserRegistrationSection';
 import { BannersSection } from './BannersSection';
 import { CentralAnnouncementSection } from './CentralAnnouncementSection';
@@ -51,7 +53,7 @@ interface AdminPanelProps {
   onSideAdChange?: (sideAd: SideAd) => void;
   centralAnnouncement?: CentralAnnouncement;
   onCentralAnnouncementChange?: (announcement: CentralAnnouncement) => void;
-  onAddCourse?: (newCourse: Omit<Course, 'id'>) => void;
+  onAddCourse?: (newCourse: Omit<Course, 'id'>, initialSubjects?: Omit<Subject, 'id'>[]) => void;
   onDeleteCourse?: (id: string) => void;
   onUpdateCourse?: (course: Course) => void;
   onAddSubject?: (newSubject: Omit<Subject, 'id'>) => void;
@@ -115,7 +117,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [internalSubjects, setInternalSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
   const [internalActivities, setInternalActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
   const [internalStudents, setInternalStudents] = useState<StudentAdmission[]>(INITIAL_STUDENTS);
-  const [internalTeachers, setInternalTeachers] = useState<Teacher[]>([]);
+  const [internalTeachers, setInternalTeachers] = useState<Teacher[]>(INITIAL_TEACHERS);
 
   const courses = externalCourses || internalCourses;
   const subjects = externalSubjects || internalSubjects;
@@ -124,15 +126,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const teachers = externalTeachers || internalTeachers;
 
   // Handlers for Courses
-  const handleAddCourse = (newCourseData: Omit<Course, 'id'>) => {
+  const handleAddCourse = (
+    newCourseData: Omit<Course, 'id'>,
+    initialSubjects?: Omit<Subject, 'id'>[]
+  ) => {
     if (externalOnAddCourse) {
-      externalOnAddCourse(newCourseData);
+      externalOnAddCourse(newCourseData, initialSubjects);
     } else {
+      const courseId = `crs-${Date.now()}`;
       const newCourse: Course = {
         ...newCourseData,
-        id: `crs-${Date.now()}`
+        id: courseId
       };
       setInternalCourses((prev) => [newCourse, ...prev]);
+      if (initialSubjects && initialSubjects.length > 0) {
+        const newSubs: Subject[] = initialSubjects.map((s, idx) => ({
+          ...s,
+          id: `sbj-${Date.now()}-${idx}`,
+          courseId,
+          courseName: newCourseData.name
+        }));
+        setInternalSubjects((prev) => [...newSubs, ...prev]);
+      }
     }
   };
 
@@ -288,6 +303,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
+  const handleUpdateTeacher = (teacher: Teacher) => {
+    if (externalOnUpdateTeacher) {
+      externalOnUpdateTeacher(teacher);
+    } else {
+      setInternalTeachers((prev) =>
+        prev.map((t) => (t.id === teacher.id ? teacher : t))
+      );
+    }
+  };
+
   const handleUpdateTeacherStatus = (
     id: string,
     status: Teacher['status']
@@ -318,15 +343,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     },
     {
       id: 'courses',
-      label: 'Crear Cursos',
+      label: 'Crear Curso o Técnico',
       icon: GraduationCap,
       count: courses.length
     },
     {
       id: 'subjects',
-      label: 'Agregar Materias',
+      label: 'Materias por Curso o Técnico',
       icon: BookOpen,
       count: subjects.length
+    },
+    {
+      id: 'teacher-organization',
+      label: 'Organización Docente',
+      icon: Users,
+      count: teachers.length
     },
     {
       id: 'admissions',
@@ -492,6 +523,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               courses={courses}
               subjects={subjects}
               students={students}
+              teachers={teachers}
               onNavigate={(section) => setActiveSection(section)}
             />
           )}
@@ -499,9 +531,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {activeSection === 'courses' && (
             <CoursesSection
               courses={courses}
+              subjects={subjects}
+              teachers={teachers}
+              students={students}
               onAddCourse={handleAddCourse}
               onDeleteCourse={handleDeleteCourse}
               onUpdateCourse={handleUpdateCourse}
+              onAddSubject={handleAddSubject}
+              onUpdateSubject={handleUpdateSubject}
+              onDeleteSubject={handleDeleteSubject}
+              onNavigateToSubjects={() => setActiveSection('subjects')}
             />
           )}
 
@@ -509,8 +548,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <SubjectsSection
               subjects={subjects}
               courses={courses}
+              teachers={teachers}
               onAddSubject={handleAddSubject}
               onDeleteSubject={handleDeleteSubject}
+              onUpdateSubject={handleUpdateSubject}
+              onNavigateToCourses={() => setActiveSection('courses')}
+            />
+          )}
+
+          {activeSection === 'teacher-organization' && (
+            <TeacherOrganizationSection
+              teachers={teachers}
+              courses={courses}
+              subjects={subjects}
+              students={students}
+              onUpdateTeacher={handleUpdateTeacher}
+              onUpdateSubject={handleUpdateSubject}
+              onNavigateToSubjects={() => setActiveSection('subjects')}
+              onNavigateToCourses={() => setActiveSection('courses')}
             />
           )}
 
@@ -519,10 +574,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               students={students}
               teachers={teachers}
               courses={courses}
+              subjects={subjects}
               onAddStudent={handleAddStudent}
               onDeleteStudent={handleDeleteStudent}
               onUpdateStudentStatus={handleUpdateStudentStatus}
               onAddTeacher={handleAddTeacher}
+              onUpdateTeacher={handleUpdateTeacher}
               onDeleteTeacher={handleDeleteTeacher}
               onUpdateTeacherStatus={handleUpdateTeacherStatus}
             />

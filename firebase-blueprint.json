@@ -117,6 +117,25 @@
         "requestDate": { "type": "string" }
       },
       "required": ["identifier", "status", "requestDate"]
+    },
+    "Grade": {
+      "title": "Grade",
+      "description": "Academic grade record for a student in a subject.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentCedula": { "type": "string" },
+        "studentName": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "courseId": { "type": "string" },
+        "corte1": { "type": "number" },
+        "corte2": { "type": "number" },
+        "corte3": { "type": "number" },
+        "definitiva": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["studentId", "subjectId"]
     }
   },
   "firestore": {
@@ -195,6 +214,14 @@
     "recoveryRequests": {
       "schema": { "$ref": "#/entities/PasswordRecoveryRequest" },
       "description": "Stores password recovery requests.",
+      "rules": {
+        "read": "true",
+        "write": "true"
+      }
+    },
+    "grades": {
+      "schema": { "$ref": "#/entities/Grade" },
+      "description": "Stores student grades per subject.",
       "rules": {
         "read": "true",
         "write": "true"

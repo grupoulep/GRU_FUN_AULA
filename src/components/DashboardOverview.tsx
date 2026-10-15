@@ -1,11 +1,12 @@
 import React from 'react';
-import { Course, Subject, StudentAdmission, AdminSection } from '../types';
-import { GraduationCap, BookOpen, UserCheck, ArrowRight, Building, CheckCircle2 } from 'lucide-react';
+import { Course, Subject, StudentAdmission, Teacher, AdminSection } from '../types';
+import { GraduationCap, BookOpen, UserCheck, ArrowRight, Building, CheckCircle2, Users, ShieldCheck } from 'lucide-react';
 
 interface DashboardOverviewProps {
   courses: Course[];
   subjects: Subject[];
   students: StudentAdmission[];
+  teachers?: Teacher[];
   onNavigate: (section: AdminSection) => void;
 }
 
@@ -13,8 +14,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   courses,
   subjects,
   students,
+  teachers = [],
   onNavigate
 }) => {
+  const teachersWithSubjects = teachers.filter((t) =>
+    subjects.some(
+      (s) =>
+        s.professorId === t.id ||
+        s.professorCedula === t.cedula ||
+        (s.professor && t.fullName && s.professor.toLowerCase().includes(t.fullName.toLowerCase()))
+    )
+  ).length;
+
   return (
     <div id="dashboard-overview" className="space-y-6">
       {/* Top Banner */}
@@ -28,7 +39,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               Gestión Integral de la Institución
             </h2>
             <p className="text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Supervisión de oferta académica, asignaturas y proceso de admisiones en tiempo real.
+              Supervisión de oferta académica, asignación de docentes por materia y accesos al portal en tiempo real.
             </p>
           </div>
 
@@ -41,8 +52,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
       </div>
 
-      {/* 3 Metric Cards linking to the 3 sections */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 4 Metric Cards linking to core sections */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Crear Cursos */}
         <div
           id="stat-card-courses"
@@ -55,9 +66,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
               <span className="text-2xl font-bold text-slate-900">{courses.length}</span>
             </div>
-            <h3 className="font-semibold text-slate-900 text-sm">Cursos Académicos</h3>
+            <h3 className="font-semibold text-slate-900 text-sm">Cursos y Técnicos</h3>
             <p className="text-xs text-slate-500 mt-1">
-              {courses.length} cursos registrados con código de búsqueda.
+              {courses.length} programas formativos (Cursos y Técnicos) con materias integradas.
             </p>
           </div>
           <button
@@ -65,7 +76,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             onClick={() => onNavigate('courses')}
             className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-700 hover:text-amber-800 transition-colors cursor-pointer w-full text-left"
           >
-            <span>Ir a Crear Cursos</span>
+            <span>Ir a Crear Curso o Técnico</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -92,12 +103,39 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             onClick={() => onNavigate('subjects')}
             className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-700 hover:text-blue-800 transition-colors cursor-pointer w-full text-left"
           >
-            <span>Ir a Agregar Materias</span>
+            <span>Ver Materias por Curso o Técnico</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Card 3: Admitir Estudiantes */}
+        {/* Card 3: Organización Docente */}
+        <div
+          id="stat-card-teacher-org"
+          className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-2xl font-bold text-purple-950">{teachers.length}</span>
+            </div>
+            <h3 className="font-semibold text-slate-900 text-sm">Organización Docente</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              {teachersWithSubjects} docentes con materias asignadas y accesos.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('teacher-organization')}
+            className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-purple-700 hover:text-purple-800 transition-colors cursor-pointer w-full text-left"
+          >
+            <span>Cursos y Materias por Docente</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Card 4: Admitir Estudiantes */}
         <div
           id="stat-card-admissions"
           className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all"
@@ -109,7 +147,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </div>
               <span className="text-2xl font-bold text-slate-900">{students.length}</span>
             </div>
-            <h3 className="font-semibold text-slate-900 text-sm">Estudiantes Registrados y Admitidos</h3>
+            <h3 className="font-semibold text-slate-900 text-sm">Estudiantes</h3>
             <p className="text-xs text-slate-500 mt-1">
               {students.filter((s) => s.status === 'Matriculado').length} matriculados formalmente.
             </p>
@@ -119,7 +157,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             onClick={() => onNavigate('admissions')}
             className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors cursor-pointer w-full text-left"
           >
-            <span>Ir a Admitir / Registrar Estudiantes</span>
+            <span>Ir a Registrar Usuarios</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

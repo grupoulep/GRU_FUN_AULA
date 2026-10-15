@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Course, StudentAdmission, Teacher } from '../types';
+import { Course, StudentAdmission, Teacher, Subject } from '../types';
 import { StudentsSection } from './StudentsSection';
 import { TeachersSection } from './TeachersSection';
 
@@ -7,10 +7,12 @@ interface UserRegistrationSectionProps {
   students: StudentAdmission[];
   teachers: Teacher[];
   courses: Course[];
+  subjects?: Subject[];
   onAddStudent: (student: Omit<StudentAdmission, 'id' | 'admissionDate'>) => void;
   onDeleteStudent: (id: string) => void;
   onUpdateStudentStatus: (id: string, status: StudentAdmission['status']) => void;
   onAddTeacher: (teacher: Omit<Teacher, 'id' | 'registrationDate'>) => void;
+  onUpdateTeacher?: (teacher: Teacher) => void;
   onDeleteTeacher: (id: string) => void;
   onUpdateTeacherStatus: (id: string, status: Teacher['status']) => void;
 }
@@ -19,10 +21,12 @@ export const UserRegistrationSection: React.FC<UserRegistrationSectionProps> = (
   students,
   teachers,
   courses,
+  subjects = [],
   onAddStudent,
   onDeleteStudent,
   onUpdateStudentStatus,
   onAddTeacher,
+  onUpdateTeacher,
   onDeleteTeacher,
   onUpdateTeacherStatus
 }) => {
@@ -66,7 +70,9 @@ export const UserRegistrationSection: React.FC<UserRegistrationSectionProps> = (
           <TeachersSection
             teachers={teachers}
             courses={courses}
+            subjects={subjects}
             onAddTeacher={onAddTeacher}
+            onUpdateTeacher={onUpdateTeacher}
             onDeleteTeacher={onDeleteTeacher}
             onUpdateStatus={onUpdateTeacherStatus}
           />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Teacher, Course } from '../types';
+import { Teacher, Course, Subject } from '../types';
 import { CourseMultiSelect } from './CourseMultiSelect';
 import {
   UserPlus,
@@ -15,13 +15,18 @@ import {
   Eye,
   X,
   FileBadge,
-  GraduationCap
+  GraduationCap,
+  BookOpen,
+  Edit2,
+  ShieldCheck
 } from 'lucide-react';
 
 interface TeachersSectionProps {
   teachers: Teacher[];
   courses: Course[];
+  subjects?: Subject[];
   onAddTeacher: (teacher: Omit<Teacher, 'id' | 'registrationDate'>) => void;
+  onUpdateTeacher?: (teacher: Teacher) => void;
   onDeleteTeacher: (id: string) => void;
   onUpdateStatus: (id: string, status: Teacher['status']) => void;
 }
@@ -29,7 +34,9 @@ interface TeachersSectionProps {
 export const TeachersSection: React.FC<TeachersSectionProps> = ({
   teachers,
   courses,
+  subjects = [],
   onAddTeacher,
+  onUpdateTeacher,
   onDeleteTeacher,
   onUpdateStatus
 }) => {
@@ -41,6 +48,16 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
 
   // Selected teacher for detail view modal
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+
+  // Edit Teacher Modal State
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editCedula, setEditCedula] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editCourseIds, setEditCourseIds] = useState<string[]>([]);
+  const [editStatus, setEditStatus] = useState<Teacher['status']>('Activo');
+  const [editPassword, setEditPassword] = useState('');
 
   // Form State
   const [fullName, setFullName] = useState('');
@@ -119,12 +136,60 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
     setTimeout(() => setCopiedNotification(false), 2500);
   };
 
+  const getTeacherSubjects = (teacher: Teacher) => {
+    return subjects.filter((s) => {
+      return (
+        (s.professorCedula && s.professorCedula.trim() === teacher.cedula.trim()) ||
+        (s.professorId && s.professorId === teacher.id) ||
+        (s.professor && teacher.fullName && s.professor.trim().toLowerCase() === teacher.fullName.trim().toLowerCase()) ||
+        (teacher.fullName && s.professor && teacher.fullName.toLowerCase().includes(s.professor.toLowerCase()))
+      );
+    });
+  };
+
+  const handleStartEdit = (teacher: Teacher) => {
+    setEditingTeacher(teacher);
+    setEditFullName(teacher.fullName);
+    setEditCedula(teacher.cedula);
+    setEditEmail(teacher.email);
+    setEditPhone(teacher.phone || '');
+    setEditCourseIds(teacher.courseIds || []);
+    setEditStatus(teacher.status);
+    setEditPassword(teacher.initialPassword || `doc-${teacher.cedula}`);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeacher || !editFullName.trim() || !editCedula.trim() || !onUpdateTeacher) return;
+
+    const matchedCourses = courses.filter((c) => editCourseIds.includes(c.id));
+    const courseNames = matchedCourses.length > 0
+      ? matchedCourses.map((c) => c.name).join(', ')
+      : 'Curso General';
+
+    onUpdateTeacher({
+      ...editingTeacher,
+      fullName: editFullName.trim(),
+      cedula: editCedula.trim(),
+      email: editEmail.trim(),
+      phone: editPhone.trim(),
+      courseIds: editCourseIds,
+      courseName: courseNames,
+      initialPassword: editPassword.trim(),
+      status: editStatus
+    });
+
+    setEditingTeacher(null);
+  };
+
   const filteredTeachers = teachers.filter((s) => {
+    const tSubjects = getTeacherSubjects(s);
     const matchesSearch =
       s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.cedula.includes(searchTerm) ||
       s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.courseName.toLowerCase().includes(searchTerm.toLowerCase());
+      (s.courseName && s.courseName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      tSubjects.some((sub) => sub.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'todos' || s.status === statusFilter;
     const matchesType = true;
     return matchesSearch && matchesStatus && matchesType;
@@ -140,10 +205,10 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
             className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5"
           >
             <UserCheck className="w-6 h-6 text-slate-900" />
-            <span>Admitir y Registrar Profesors</span>
+            <span>Admitir y Registrar Profesores</span>
           </h2>
           <p id="teachers-subtitle" className="text-sm text-slate-500 mt-0.5">
-            Módulo para admitir postulantes y registrar formalmente a nuevos profesors con sus credenciales de acceso.
+            Módulo para admitir postulantes y registrar formalmente a nuevos profesores con sus credenciales de acceso.
           </p>
         </div>
 
@@ -493,130 +558,156 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 <tr className="border-b border-slate-200 text-slate-500 bg-slate-50/70">
                   <th className="py-2.5 px-3 font-semibold">Cédula</th>
                   <th className="py-2.5 px-3 font-semibold">Profesor</th>
-                  <th className="py-2.5 px-3 font-semibold">Curso Asignado</th>
-                  <th className="py-2.5 px-3 font-semibold text-center">Trámite</th>
+                  <th className="py-2.5 px-3 font-semibold">Cursos Asignados</th>
+                  <th className="py-2.5 px-3 font-semibold">Materias Dictadas</th>
                   <th className="py-2.5 px-3 font-semibold text-center">Estado</th>
                   <th className="py-2.5 px-3 font-semibold text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredTeachers.map((std) => (
-                  <tr
-                    key={std.id}
-                    id={`teacher-row-${std.id}`}
-                    className="hover:bg-slate-50/80 transition-colors"
-                  >
-                    {/* Cedula */}
-                    <td className="py-3 px-3 font-mono font-medium text-slate-800">
-                      <div className="flex items-center gap-1.5">
-                        <IdCard className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{std.cedula}</span>
-                      </div>
-                    </td>
-
-                    {/* Teacher Info */}
-                    <td className="py-3 px-3">
-                      <div className="font-semibold text-slate-900">{std.fullName}</div>
-                      <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2 mt-0.5">
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3 h-3 text-slate-400" />
-                          {std.email}
-                        </span>
-                        {std.phone && (
-                          <span className="flex items-center gap-1 text-slate-400">
-                            <Phone className="w-3 h-3" />
-                            {std.phone}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Course(s) */}
-                    <td className="py-3 px-3 text-slate-700">
-                      <div className="flex flex-col gap-1 max-w-[240px]">
+                {filteredTeachers.map((std) => {
+                  const stdSubjects = getTeacherSubjects(std);
+                  return (
+                    <tr
+                      key={std.id}
+                      id={`teacher-row-${std.id}`}
+                      className="hover:bg-slate-50/80 transition-colors"
+                    >
+                      {/* Cedula */}
+                      <td className="py-3 px-3 font-mono font-medium text-slate-800">
                         <div className="flex items-center gap-1.5">
-                          <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span className="font-semibold text-slate-900 text-xs truncate" title={std.courseName}>
-                            {std.courseName}
-                          </span>
+                          <IdCard className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{std.cedula}</span>
                         </div>
-                        {std.courseIds && std.courseIds.length > 1 && (
-                          <div className="flex flex-wrap gap-1">
-                            {std.courseIds.map((cId) => {
-                              const cMatch = courses.find((c) => c.id === cId);
-                              return (
-                                <span
-                                  key={cId}
-                                  className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200"
-                                >
-                                  {cMatch ? cMatch.code : cId}
-                                </span>
-                              );
-                            })}
+                      </td>
+
+                      {/* Teacher Info */}
+                      <td className="py-3 px-3">
+                        <div className="font-semibold text-slate-900">{std.fullName}</div>
+                        <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2 mt-0.5">
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3 h-3 text-slate-400" />
+                            {std.email}
+                          </span>
+                          {std.phone && (
+                            <span className="flex items-center gap-1 text-slate-400">
+                              <Phone className="w-3 h-3" />
+                              {std.phone}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Course(s) */}
+                      <td className="py-3 px-3 text-slate-700">
+                        <div className="flex flex-col gap-1 max-w-[220px]">
+                          <div className="flex items-center gap-1.5">
+                            <GraduationCap className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <span className="font-semibold text-slate-900 text-xs truncate" title={std.courseName}>
+                              {std.courseName || 'Sin cursos'}
+                            </span>
+                          </div>
+                          {std.courseIds && std.courseIds.length > 1 && (
+                            <div className="flex flex-wrap gap-1">
+                              {std.courseIds.map((cId) => {
+                                const cMatch = courses.find((c) => c.id === cId);
+                                return (
+                                  <span
+                                    key={cId}
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200"
+                                  >
+                                    {cMatch ? cMatch.code : cId}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Subjects assigned */}
+                      <td className="py-3 px-3">
+                        {stdSubjects.length === 0 ? (
+                          <span className="text-[11px] text-amber-700 font-medium">
+                            Sin materias asignadas
+                          </span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1 max-w-[220px]">
+                            {stdSubjects.map((sub) => (
+                              <span
+                                key={sub.id}
+                                className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200"
+                                title={`${sub.name} (${sub.code}) - ${sub.credits} créditos`}
+                              >
+                                {sub.name}
+                              </span>
+                            ))}
                           </div>
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Registration Type Badge */}
-                    <td className="py-3 px-3 text-center">
-                      <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                        
-                      </span>
-                    </td>
-
-                    {/* Status Dropdown */}
-                    <td className="py-3 px-3 text-center">
-                      <select
-                        id={`select-status-${std.id}`}
-                        value={std.status}
-                        onChange={(e) =>
-                          onUpdateStatus(
-                            std.id,
-                            e.target.value as Teacher['status']
-                          )
-                        }
-                        className={`text-[11px] font-semibold px-2 py-1 rounded-md border cursor-pointer focus:outline-none ${
-                          std.status === 'Matriculado'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : std.status === 'Admitido'
-                            ? 'bg-blue-50 text-blue-800 border-blue-200'
-                            : 'bg-amber-50 text-amber-800 border-amber-200'
-                        }`}
-                      >
-                        <option value="Activo">Activo</option>
-                        
-                        <option value="Inactivo">Inactivo</option>
-                      </select>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedTeacher(std)}
-                          className="p-1.5 text-slate-500 hover:text-slate-900 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
-                          title="Ver Ficha y Credenciales"
-                          aria-label={`Ver ficha de ${std.fullName}`}
+                      {/* Status Dropdown */}
+                      <td className="py-3 px-3 text-center">
+                        <select
+                          id={`select-status-${std.id}`}
+                          value={std.status || 'Activo'}
+                          onChange={(e) =>
+                            onUpdateStatus(
+                              std.id,
+                              e.target.value as Teacher['status']
+                            )
+                          }
+                          className={`text-[11px] font-semibold px-2 py-1 rounded-md border cursor-pointer focus:outline-none ${
+                            std.status === 'Activo'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-slate-100 text-slate-700 border-slate-300'
+                          }`}
                         >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                          <option value="Activo">Activo</option>
+                          <option value="Inactivo">Inactivo</option>
+                        </select>
+                      </td>
 
-                        <button
-                          id={`btn-delete-teacher-${std.id}`}
-                          type="button"
-                          onClick={() => onDeleteTeacher(std.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Eliminar registro"
-                          aria-label={`Eliminar a ${std.fullName}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Actions */}
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTeacher(std)}
+                            className="p-1.5 text-slate-500 hover:text-slate-900 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                            title="Ver Ficha y Credenciales"
+                            aria-label={`Ver ficha de ${std.fullName}`}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
+                          {onUpdateTeacher && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(std)}
+                              className="p-1.5 text-slate-500 hover:text-blue-700 rounded-md hover:bg-blue-50 transition-colors cursor-pointer"
+                              title="Editar datos del docente"
+                              aria-label={`Editar a ${std.fullName}`}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          <button
+                            id={`btn-delete-teacher-${std.id}`}
+                            type="button"
+                            onClick={() => onDeleteTeacher(std.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Eliminar registro"
+                            aria-label={`Eliminar a ${std.fullName}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -744,6 +835,40 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Assigned Subjects in Modal */}
+              <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1.5">
+                <span className="font-semibold text-purple-900 flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Materias Asignadas ({getTeacherSubjects(selectedTeacher).length})</span>
+                </span>
+                {getTeacherSubjects(selectedTeacher).length === 0 ? (
+                  <p className="text-[11px] text-purple-700">Sin materias asignadas para este periodo.</p>
+                ) : (
+                  <div className="space-y-1 pt-0.5">
+                    {getTeacherSubjects(selectedTeacher).map((sub) => (
+                      <div key={sub.id} className="bg-white/80 p-1.5 rounded border border-purple-200 flex justify-between text-[11px]">
+                        <span className="font-semibold text-slate-800">{sub.name}</span>
+                        <span className="text-purple-700 font-mono">{sub.code} ({sub.credits} cr)</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Portal Access Privileges */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-slate-600">
+                <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
+                  <span>Accesos Habilitados:</span>
+                </span>
+                <ul className="text-[10px] space-y-0.5 pl-4 list-disc text-slate-500">
+                  <li>Planilla de Calificaciones (Cortes 1, 2 y 3)</li>
+                  <li>Creación de Actividades, Tareas y Evaluaciones tipo test</li>
+                  <li>Calificación de entregas de alumnos</li>
+                  <li>Directorio de alumnos de sus cursos asignados</li>
+                </ul>
+              </div>
             </div>
 
             <div className="flex justify-end pt-2">
@@ -755,6 +880,124 @@ export const TeachersSection: React.FC<TeachersSectionProps> = ({
                 Cerrar Ficha
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Teacher Modal */}
+      {editingTeacher && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+        >
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-blue-700" />
+                <h3 className="font-bold text-base text-slate-900">
+                  Editar Profesor
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingTeacher(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Nombre Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Cédula / Documento *</label>
+                <input
+                  type="text"
+                  required
+                  value={editCedula}
+                  onChange={(e) => setEditCedula(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-mono focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Correo Electrónico</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Teléfono Móvil</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Cursos Asignados</label>
+                <CourseMultiSelect
+                  courses={courses}
+                  selectedCourseIds={editCourseIds}
+                  onChange={setEditCourseIds}
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Contraseña de Acceso</label>
+                <input
+                  type="text"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-mono focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1">Estado</label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none cursor-pointer"
+                >
+                  <option value="Activo">Activo</option>
+                  <option value="Inactivo">Inactivo</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeacher(null)}
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold cursor-pointer"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
